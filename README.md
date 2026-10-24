@@ -45,6 +45,13 @@ node server.js
 ```
 Then visit `http://localhost:3000` (or your local IP on phone).
 
+### 🚀 Deploying to Vercel
+
+The repository is pre-configured with `vercel.json` and `.vercelignore` for zero-configuration static deployment:
+1. Go to [Vercel](https://vercel.com) and click **"Add New Project"**.
+2. Select your repository: `Md-Ruwaid/D-opine`.
+3. Click **Deploy**. Vercel will automatically serve the website and route APK downloads with proper `application/vnd.android.package-archive` MIME headers.
+
 ---
 
 ## 🛠️ Tech Stack & Architecture

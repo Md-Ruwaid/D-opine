@@ -1,0 +1,58 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/(.*)\\.apk",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"StrictLock-Regain-v1.0.1.apk\""
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(css|js|svg|png|jpg|webp)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/website/index.html"
+    },
+    {
+      "source": "/StrictLock-Regain-v1.0.1.apk",
+      "destination": "/website/StrictLock-Regain-v1.0.1.apk"
+    },
+    {
+      "source": "/app-debug.apk",
+      "destination": "/website/StrictLock-Regain-v1.0.1.apk"
+    },
+    {
+      "source": "/style.css",
+      "destination": "/website/style.css"
+    },
+    {
+      "source": "/main.js",
+      "destination": "/website/main.js"
+    },
+    {
+      "source": "/:match*",
+      "destination": "/website/:match*"
+    }
+  ]
+}

@@ -149,6 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
         img.style.width = '100%';
         img.style.height = '100%';
         img.style.objectFit = 'contain';
+        img.onerror = () => {
+            qrContainer.innerHTML = `<div style="padding: 20px; font-size: 0.82rem; color: #131714; text-align: center;"><p style="margin-bottom: 8px;">Direct Link:</p><a href="${url}" target="_blank" style="color: #059669; font-weight: 700; text-decoration: underline;">Open Download Page</a></div>`;
+        };
         img.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=051A0D`;
         qrContainer.appendChild(img);
     }

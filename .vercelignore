@@ -1,0 +1,14 @@
+# Android Studio & Gradle project files not needed for Vercel web deployment
+app/
+gradle/
+gradlew
+gradlew.bat
+build.gradle.kts
+settings.gradle.kts
+gradle.properties
+local.properties
+.gradle/
+.kotlin/
+reference/
+*.xapk
+*.log
