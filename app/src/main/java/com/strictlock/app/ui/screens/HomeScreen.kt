@@ -145,14 +145,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    RegainMint.copy(alpha = 0.08f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
+                        .background(RegainSurface)
                         .padding(24.dp)
                 ) {
                     Column {
@@ -337,10 +330,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                                         .height((70 * animatedHeight).dp)
                                         .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
                                         .background(
-                                            if (animatedHeight > 0.5f)
-                                                Brush.verticalGradient(listOf(RegainMintLight, RegainMint))
-                                            else
-                                                Brush.verticalGradient(listOf(RegainSurfaceVariant, RegainCardBorder))
+                                            if (animatedHeight > 0.5f) RegainMint else RegainSurfaceVariant
                                         )
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))

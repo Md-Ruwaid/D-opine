@@ -25,6 +25,21 @@ class UsageCalculator(private val context: Context) {
         context.getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
     private val packageManager: PackageManager = context.packageManager
 
+    // In-memory caches to prevent expensive repeated UsageStatsManager Binder queries
+    private val ruleUsageCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Long>>()
+    @Volatile private var cachedScreenTime: Pair<Long, Long>? = null
+    @Volatile private var cachedUnlocks: Pair<Long, Int>? = null
+    @Volatile private var cachedTopApps: Pair<Long, List<AppUsageStat>>? = null
+    @Volatile private var cachedHourly: Pair<Long, List<HourlyUsage>>? = null
+
+    fun clearCache() {
+        ruleUsageCache.clear()
+        cachedScreenTime = null
+        cachedUnlocks = null
+        cachedTopApps = null
+        cachedHourly = null
+    }
+
     /**
      * Calculates the time used today in milliseconds for an active rule.
      * Core Rule Requirement:
@@ -35,18 +50,32 @@ class UsageCalculator(private val context: Context) {
         if (rule.isExpired(now)) return 0L
         if (usageStatsManager == null) return 0L
 
+        // Return cached value if queried within 4 seconds
+        val cacheKey = "${rule.id}_${rule.packageName}"
+        val cached = ruleUsageCache[cacheKey]
+        if (cached != null && (now - cached.first) < 4000L) {
+            return cached.second
+        }
+
         val startOfToday = getStartOfTodayEpochMs(now)
         val startTime = maxOf(startOfToday, rule.startEpochMs)
 
         if (startTime >= now) return 0L
 
-        return getForegroundTimeFromEvents(rule.packageName, startTime, now)
+        val result = getForegroundTimeFromEvents(rule.packageName, startTime, now)
+        ruleUsageCache[cacheKey] = Pair(now, result)
+        return result
     }
 
     /**
      * Calculates total screen-on time across all applications for today.
      */
     fun getTotalScreenTimeToday(now: Long = System.currentTimeMillis()): Long {
+        val cached = cachedScreenTime
+        if (cached != null && (now - cached.first) < 5000L) {
+            return cached.second
+        }
+
         if (usageStatsManager == null) return 0L
         val startOfToday = getStartOfTodayEpochMs(now)
         if (startOfToday >= now) return 0L
@@ -96,6 +125,7 @@ class UsageCalculator(private val context: Context) {
             totalTimeMs = stats.sumOf { it.totalTimeInForeground }
         }
 
+        cachedScreenTime = Pair(now, totalTimeMs)
         return totalTimeMs
     }
 
@@ -113,6 +143,11 @@ class UsageCalculator(private val context: Context) {
      * Calculates total phone pickups/unlocks today.
      */
     fun getDeviceUnlocksToday(now: Long = System.currentTimeMillis()): Int {
+        val cached = cachedUnlocks
+        if (cached != null && (now - cached.first) < 5000L) {
+            return cached.second
+        }
+
         if (usageStatsManager == null) return 0
         val startOfToday = getStartOfTodayEpochMs(now)
         val events = try {
@@ -131,13 +166,20 @@ class UsageCalculator(private val context: Context) {
                 unlockCount++
             }
         }
-        return if (unlockCount > 0) unlockCount else 24
+        val result = if (unlockCount > 0) unlockCount else 24
+        cachedUnlocks = Pair(now, result)
+        return result
     }
 
     /**
      * Returns top used apps for today with app labels and percentage of total usage.
      */
     fun getTopAppUsagesToday(limit: Int = 5, now: Long = System.currentTimeMillis()): List<AppUsageStat> {
+        val cached = cachedTopApps
+        if (cached != null && (now - cached.first) < 5000L) {
+            return cached.second
+        }
+
         if (usageStatsManager == null) return emptyList()
         val startOfToday = getStartOfTodayEpochMs(now)
 
@@ -149,7 +191,7 @@ class UsageCalculator(private val context: Context) {
 
         val totalTime = stats.sumOf { it.totalTimeInForeground }.coerceAtLeast(1L)
 
-        return stats
+        val result = stats
             .filter { it.totalTimeInForeground > 60_000L && it.packageName != context.packageName }
             .sortedByDescending { it.totalTimeInForeground }
             .take(limit)
@@ -167,18 +209,24 @@ class UsageCalculator(private val context: Context) {
                     percentageOfTotal = (stat.totalTimeInForeground.toFloat() / totalTime).coerceIn(0f, 1f)
                 )
             }
+        cachedTopApps = Pair(now, result)
+        return result
     }
 
     /**
      * Returns hourly usage breakdown for today (24 hours or 6 4-hour slots).
      */
     fun getHourlyUsageToday(now: Long = System.currentTimeMillis()): List<HourlyUsage> {
+        val cached = cachedHourly
+        if (cached != null && (now - cached.first) < 5000L) {
+            return cached.second
+        }
+
         val slots = listOf("12A", "4A", "8A", "12P", "4P", "8P")
         val totalMs = getTotalScreenTimeToday(now)
         val totalMins = (totalMs / (1000 * 60)).toInt()
 
-        // Distribute usage proportionally across active waking hours
-        return slots.mapIndexed { idx, label ->
+        val result = slots.mapIndexed { idx, label ->
             val minutes = when (idx) {
                 0, 1 -> 5
                 2 -> (totalMins * 0.2f).toInt()
@@ -188,6 +236,8 @@ class UsageCalculator(private val context: Context) {
             }
             HourlyUsage(label, minutes.coerceAtLeast(2))
         }
+        cachedHourly = Pair(now, result)
+        return result
     }
 
     /**

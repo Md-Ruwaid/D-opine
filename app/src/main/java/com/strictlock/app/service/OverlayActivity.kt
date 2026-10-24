@@ -194,54 +194,26 @@ fun MindfulOverlayContent(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Animated Breathing / Pulsing Circle
+            // Crisp clean circle without blur, glow, or radial gradients
             Box(
                 modifier = Modifier
-                    .size(190.dp)
-                    .scale(scale),
+                    .size(110.dp)
+                    .scale(scale)
+                    .clip(CircleShape)
+                    .background(if (isStrictBlock) RegainCrimson else RegainMint)
+                    .border(
+                        width = 2.dp,
+                        color = if (isStrictBlock) RegainCrimson.copy(alpha = 0.5f) else RegainMintLight,
+                        shape = CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                // Outer glow
-                Box(
-                    modifier = Modifier
-                        .size(190.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isStrictBlock) RegainCrimson.copy(alpha = 0.12f)
-                            else RegainMint.copy(alpha = 0.12f)
-                        )
+                Icon(
+                    imageVector = if (isStrictBlock) Icons.Default.Lock else Icons.Default.Spa,
+                    contentDescription = null,
+                    tint = if (isStrictBlock) RegainTextPrimary else RegainDarkBg,
+                    modifier = Modifier.size(40.dp)
                 )
-
-                // Middle ring
-                Box(
-                    modifier = Modifier
-                        .size(140.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isStrictBlock) RegainCrimson.copy(alpha = 0.25f)
-                            else RegainMint.copy(alpha = 0.22f)
-                        )
-                )
-
-                // Core Circle
-                Box(
-                    modifier = Modifier
-                        .size(90.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                colors = if (isStrictBlock) listOf(RegainCrimson, Color(0xFF991B1B))
-                                else listOf(RegainMintLight, RegainMint)
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isStrictBlock) Icons.Default.Lock else Icons.Default.Spa,
-                        contentDescription = null,
-                        tint = if (isStrictBlock) RegainTextPrimary else RegainDarkBg,
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(36.dp))

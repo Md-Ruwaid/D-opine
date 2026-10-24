@@ -12,6 +12,7 @@ class InstalledAppsRepository(private val context: Context) {
 
     private val packageManager: PackageManager = context.packageManager
     private val whitelistManager = com.strictlock.app.engine.WhitelistManager(context)
+    private val appCache = java.util.concurrent.ConcurrentHashMap<String, AppInfo>()
 
     suspend fun getInstalledLaunchableApps(): List<AppInfo> = withContext(Dispatchers.IO) {
         val intent = Intent(Intent.ACTION_MAIN).apply {
@@ -38,30 +39,41 @@ class InstalledAppsRepository(private val context: Context) {
             if (seenPackages.contains(pkg)) continue
             seenPackages.add(pkg)
 
+            val cached = appCache[pkg]
+            if (cached != null) {
+                apps.add(cached)
+                continue
+            }
+
             val appName = resolveInfo.loadLabel(packageManager).toString()
             val icon = resolveInfo.loadIcon(packageManager)
             val isSystem = (resolveInfo.activityInfo.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
 
-            apps.add(
-                AppInfo(
-                    packageName = pkg,
-                    appName = appName,
-                    icon = icon,
-                    isSystemApp = isSystem
-                )
+            val item = AppInfo(
+                packageName = pkg,
+                appName = appName,
+                icon = icon,
+                isSystemApp = isSystem
             )
+            appCache[pkg] = item
+            apps.add(item)
         }
 
         apps.sortedBy { it.appName.lowercase() }
     }
 
     fun getAppInfo(packageName: String): AppInfo? {
+        val cached = appCache[packageName]
+        if (cached != null) return cached
+
         return try {
             val appInfo = packageManager.getApplicationInfo(packageName, 0)
             val label = packageManager.getApplicationLabel(appInfo).toString()
             val icon = packageManager.getApplicationIcon(appInfo)
             val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-            AppInfo(packageName, label, icon, isSystem)
+            val item = AppInfo(packageName, label, icon, isSystem)
+            appCache[packageName] = item
+            item
         } catch (_: Exception) {
             null
         }

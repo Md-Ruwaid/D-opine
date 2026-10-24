@@ -15,14 +15,14 @@
 
     --mint-primary: #22C55E;
     --mint-light: #4ADE80;
-    --mint-glow: rgba(34, 197, 94, 0.25);
+    --mint-glow: rgba(34, 197, 94, 0.12);
     --mint-dark: #15803D;
 
     --amber-warning: #F59E0B;
-    --amber-glow: rgba(245, 158, 11, 0.22);
+    --amber-glow: rgba(245, 158, 11, 0.12);
 
     --crimson-strict: #EF4444;
-    --crimson-glow: rgba(239, 68, 68, 0.25);
+    --crimson-glow: rgba(239, 68, 68, 0.12);
 
     --text-primary: #F9FAFB;
     --text-secondary: #9CA3AF;
@@ -67,39 +67,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Ambient Background Glowing Orbs */
-.glow-orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(120px);
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.65;
-}
-
-.orb-1 {
-    top: -10%;
-    left: 20%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(34, 197, 94, 0.12) 0%, transparent 70%);
-}
-
-.orb-2 {
-    top: 40%;
-    right: -10%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
-}
-
-.orb-3 {
-    bottom: -10%;
-    left: 10%;
-    width: 700px;
-    height: 700px;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
-}
 
 /* Typography Helpers */
 h1, h2, h3, h4 {

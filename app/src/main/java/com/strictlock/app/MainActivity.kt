@@ -92,29 +92,40 @@ class MainActivity : ComponentActivity() {
 fun MainContent(viewModel: MainViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val permissions by viewModel.permissions.collectAsState()
+    var hasEnteredApp by remember { androidx.compose.runtime.mutableStateOf(false) }
 
-    Scaffold(
-        containerColor = RegainDarkBg,
-        bottomBar = {
-            RegainBottomNavigationBar(
-                selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it },
-                hasPermissionWarning = !permissions.allGranted
-            )
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(RegainDarkBg)
-        ) {
-            when (selectedTab) {
-                0 -> HomeScreen(viewModel)
-                1 -> BlocksScreen(viewModel)
-                2 -> FocusScreen(viewModel)
-                3 -> StrictLockScreen(viewModel)
-                4 -> PermissionsScreen(viewModel)
+    // Intercept with permission popups at the very start of the app
+    // Admin is NOT necessary, but other 5 permissions ARE required before entering
+    if (!permissions.requiredGranted || !hasEnteredApp) {
+        com.strictlock.app.ui.screens.StartupPermissionsGate(
+            viewModel = viewModel,
+            permissions = permissions,
+            onContinue = { hasEnteredApp = true }
+        )
+    } else {
+        Scaffold(
+            containerColor = RegainDarkBg,
+            bottomBar = {
+                RegainBottomNavigationBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { selectedTab = it },
+                    hasPermissionWarning = !permissions.requiredGranted
+                )
+            }
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(RegainDarkBg)
+            ) {
+                when (selectedTab) {
+                    0 -> HomeScreen(viewModel)
+                    1 -> BlocksScreen(viewModel)
+                    2 -> FocusScreen(viewModel)
+                    3 -> StrictLockScreen(viewModel)
+                    4 -> PermissionsScreen(viewModel)
+                }
             }
         }
     }

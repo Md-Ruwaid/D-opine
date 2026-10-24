@@ -62,9 +62,25 @@ data class PermissionsData(
     val hasBatteryUnrestricted: Boolean = false,
     val hasNotificationPermission: Boolean = false
 ) {
-    val allGranted: Boolean
+    // The 5 essential subsystem accesses required before entering the app
+    // Device Admin is OPTIONAL per user requirement
+    val requiredGranted: Boolean
         get() = hasUsageAccess && hasOverlayPermission && hasAccessibilityService &&
-                hasDeviceAdmin && hasBatteryUnrestricted && hasNotificationPermission
+                hasBatteryUnrestricted && hasNotificationPermission
+
+    val allGranted: Boolean
+        get() = requiredGranted && hasDeviceAdmin
+
+    val remainingRequiredCount: Int
+        get() {
+            var count = 0
+            if (!hasUsageAccess) count++
+            if (!hasOverlayPermission) count++
+            if (!hasAccessibilityService) count++
+            if (!hasBatteryUnrestricted) count++
+            if (!hasNotificationPermission) count++
+            return count
+        }
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {

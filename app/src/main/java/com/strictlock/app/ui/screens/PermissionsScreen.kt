@@ -115,7 +115,7 @@ fun PermissionsScreen(viewModel: MainViewModel) {
                 colors = CardDefaults.cardColors(containerColor = RegainSurface),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    if (permissions.allGranted) RegainMint else RegainAmber
+                    if (permissions.requiredGranted) RegainMint else RegainAmber
                 )
             ) {
                 Row(
@@ -129,15 +129,15 @@ fun PermissionsScreen(viewModel: MainViewModel) {
                             .size(40.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(
-                                if (permissions.allGranted) RegainMint.copy(alpha = 0.15f)
+                                if (permissions.requiredGranted) RegainMint.copy(alpha = 0.15f)
                                 else RegainAmber.copy(alpha = 0.15f)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (permissions.allGranted) Icons.Default.Shield else Icons.Default.Warning,
+                            imageVector = if (permissions.requiredGranted) Icons.Default.Shield else Icons.Default.Warning,
                             contentDescription = null,
-                            tint = if (permissions.allGranted) RegainMint else RegainAmber,
+                            tint = if (permissions.requiredGranted) RegainMint else RegainAmber,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -146,13 +146,13 @@ fun PermissionsScreen(viewModel: MainViewModel) {
 
                     Column {
                         Text(
-                            text = if (permissions.allGranted) "All Shields Fully Active" else "Permissions Setup Needed",
+                            text = if (permissions.requiredGranted) "Essential Shields Active" else "Permissions Setup Needed",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (permissions.allGranted) RegainMintLight else RegainAmber
+                            color = if (permissions.requiredGranted) RegainMintLight else RegainAmber
                         )
                         Text(
-                            text = if (permissions.allGranted)
+                            text = if (permissions.requiredGranted)
                                 "Background monitoring, anti-tamper, and overlay ready."
                             else
                                 "Grant missing accesses below to ensure rock-solid enforcement.",
@@ -224,8 +224,8 @@ fun PermissionsScreen(viewModel: MainViewModel) {
 
         item {
             PermissionCard(
-                title = "4. Device Admin",
-                description = "Prevents premature uninstallation or deactivation while strict rules are running.",
+                title = "4. Device Admin (Optional)",
+                description = "Optional anti-uninstall shield. Not required to run StrictLock.",
                 granted = permissions.hasDeviceAdmin,
                 icon = Icons.Outlined.Security,
                 onClick = { viewModel.openDeviceAdminSettings(context) }
