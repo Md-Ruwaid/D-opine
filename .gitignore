@@ -1,0 +1,27 @@
+# Android & Gradle build files
+*.apk
+*.aab
+*.ap_
+*.dex
+build/
+app/build/
+.gradle/
+.kotlin/
+local.properties
+
+# Android Studio & IDE
+.idea/
+*.iml
+.navigation/
+captures/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Analysis and Reference folders
+reference/
+*.xapk
+
+# Allow website setup APK for download portal
+!website/*.apk

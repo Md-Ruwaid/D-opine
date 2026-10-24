@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">StrictLock</string>
+    <string name="accessibility_service_description">StrictLock requires Accessibility Service to monitor foreground app usage and protect against tampering or bypassing active restrictions.</string>
+    <string name="device_admin_description">StrictLock Device Administrator prevents uninstallation and force-stopping while strict rules are active.</string>
+</resources>
