@@ -23,5 +23,6 @@ Thumbs.db
 reference/
 *.xapk
 
-# Allow website setup APK for download portal
+# Allow release setup APK for web portal
+!StrictLock-Regain-v1.0.1.apk
 !website/*.apk

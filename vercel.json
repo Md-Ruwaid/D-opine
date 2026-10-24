@@ -29,30 +29,16 @@
       ]
     }
   ],
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/",
-      "destination": "/website/index.html"
+      "source": "/website",
+      "destination": "/",
+      "permanent": true
     },
     {
-      "source": "/StrictLock-Regain-v1.0.1.apk",
-      "destination": "/website/StrictLock-Regain-v1.0.1.apk"
-    },
-    {
-      "source": "/app-debug.apk",
-      "destination": "/website/StrictLock-Regain-v1.0.1.apk"
-    },
-    {
-      "source": "/style.css",
-      "destination": "/website/style.css"
-    },
-    {
-      "source": "/main.js",
-      "destination": "/website/main.js"
-    },
-    {
-      "source": "/:match*",
-      "destination": "/website/:match*"
+      "source": "/website/:match*",
+      "destination": "/:match*",
+      "permanent": true
     }
   ]
 }
