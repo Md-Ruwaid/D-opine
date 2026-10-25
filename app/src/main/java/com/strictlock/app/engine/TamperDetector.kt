@@ -3,7 +3,6 @@ package com.strictlock.app.engine
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.SystemClock
-import kotlin.math.abs
 
 class TamperDetector(context: Context) {
 

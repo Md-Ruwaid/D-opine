@@ -31,7 +31,7 @@ StrictLock recreates the core digital mindfulness and anti-distraction architect
 
 ## 🌐 Official Download Portal & Website
 
-A dedicated landing page is included in the [`website/`](./website) folder:
+A dedicated landing page is built directly into the repository root:
 - **Phone Frame Live Simulator**: Interactive previews of Home, Mindful Pause, Distraction Shields, Focus Timer, and StrictLock screens.
 - **Live Breathing Exercise**: Interactive 4-3-4 mindful pause simulator in the browser.
 - **Direct APK Downloads**: Serves `StrictLock-Regain-v1.0.1.apk` with proper Android package MIME types.
@@ -40,7 +40,6 @@ A dedicated landing page is included in the [`website/`](./website) folder:
 
 To run the download site locally:
 ```bash
-cd website
 node server.js
 ```
 Then visit `http://localhost:3000` (or your local IP on phone).

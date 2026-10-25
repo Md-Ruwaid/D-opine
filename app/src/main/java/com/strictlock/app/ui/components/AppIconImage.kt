@@ -1,6 +1,5 @@
 package com.strictlock.app.ui.components
 
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable

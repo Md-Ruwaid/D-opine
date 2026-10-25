@@ -25,4 +25,3 @@ reference/
 
 # Allow release setup APK for web portal
 !StrictLock-Regain-v1.0.1.apk
-!website/*.apk

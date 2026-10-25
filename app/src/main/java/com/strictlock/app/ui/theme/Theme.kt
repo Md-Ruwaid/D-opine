@@ -35,7 +35,9 @@ fun StrictLockTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
+            @Suppress("DEPRECATION")
             window.statusBarColor = RegainDarkBg.toArgb()
+            @Suppress("DEPRECATION")
             window.navigationBarColor = RegainDarkBg.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false

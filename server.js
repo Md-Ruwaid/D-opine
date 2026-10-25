@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const PORT = 3000;
 const BASE_DIR = __dirname;
@@ -58,8 +59,21 @@ const server = http.createServer((req, res) => {
     });
 });
 
+function getLocalIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+    return 'localhost';
+}
+
 server.listen(PORT, '0.0.0.0', () => {
+    const ip = getLocalIp();
     console.log(`StrictLock Web Server running at:`);
     console.log(`- Local:   http://localhost:${PORT}`);
-    console.log(`- Network: http://10.146.8.144:${PORT}`);
+    console.log(`- Network: http://${ip}:${PORT}`);
 });
