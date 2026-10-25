@@ -28,8 +28,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -140,6 +142,18 @@ fun MindfulOverlayContent(
     onProceed: () -> Unit
 ) {
     var countdown by remember { mutableIntStateOf(5) }
+    var secondsRemaining by remember {
+        val now = java.util.Calendar.getInstance()
+        val midnight = java.util.Calendar.getInstance().apply {
+            add(java.util.Calendar.DAY_OF_YEAR, 1)
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val diffSecs = ((midnight.timeInMillis - now.timeInMillis) / 1000L).coerceAtLeast(0L)
+        androidx.compose.runtime.mutableLongStateOf(diffSecs)
+    }
 
     LaunchedEffect(Unit) {
         while (countdown > 0) {
@@ -147,6 +161,26 @@ fun MindfulOverlayContent(
             countdown -= 1
         }
     }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000L)
+            val now = java.util.Calendar.getInstance()
+            val midnight = java.util.Calendar.getInstance().apply {
+                add(java.util.Calendar.DAY_OF_YEAR, 1)
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            secondsRemaining = ((midnight.timeInMillis - now.timeInMillis) / 1000L).coerceAtLeast(0L)
+        }
+    }
+
+    val hrs = secondsRemaining / 3600
+    val mins = (secondsRemaining % 3600) / 60
+    val secs = secondsRemaining % 60
+    val formattedTimeRemaining = String.format("%02dh %02dm %02ds left", hrs, mins, secs)
 
     // Breathing Animation
     val infiniteTransition = rememberInfiniteTransition(label = "breathing")
@@ -172,6 +206,41 @@ fun MindfulOverlayContent(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
+            // Small and Subtle Time Remaining Pill
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(RegainSurfaceVariant)
+                    .border(
+                        1.dp,
+                        if (isStrictBlock) RegainCrimson.copy(alpha = 0.4f) else RegainMint.copy(alpha = 0.4f),
+                        RoundedCornerShape(20.dp)
+                    )
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.HourglassTop,
+                        contentDescription = null,
+                        tint = if (isStrictBlock) RegainCrimson else RegainMint,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = formattedTimeRemaining,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        color = if (isStrictBlock) RegainTextPrimary else RegainMintLight,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             // App Icon
             if (packageName.isNotBlank()) {
                 AppIconImage(

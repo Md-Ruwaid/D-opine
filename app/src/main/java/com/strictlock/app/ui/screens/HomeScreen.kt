@@ -20,19 +20,33 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.strictlock.app.ui.theme.RegainCrimson
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,6 +84,42 @@ fun HomeScreen(viewModel: MainViewModel) {
     val savedHours = savedTimeMs / (3600 * 1000)
     val savedMins = (savedTimeMs % (3600 * 1000)) / (60 * 1000)
 
+    val strictAppsCount by viewModel.strictAppsCount.collectAsState()
+    val hasStrictRules by viewModel.hasStrictRules.collectAsState()
+    val isStrictModeLocked by viewModel.isStrictModeLocked.collectAsState()
+    val context = LocalContext.current
+
+    var showCannotDisableDialog by remember { mutableStateOf(false) }
+
+    if (showCannotDisableDialog) {
+        AlertDialog(
+            onDismissRequest = { showCannotDisableDialog = false },
+            title = {
+                Text(
+                    text = "Strict Mode Protected",
+                    fontWeight = FontWeight.Bold,
+                    color = RegainTextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "You currently have $strictAppsCount app(s) locked under strict rules. In accordance with StrictLock, strict mode and uninstall protection cannot be deactivated until rules expire or through Emergency Reset.",
+                    fontSize = 13.sp,
+                    color = RegainTextSecondary
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showCannotDisableDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = RegainMint, contentColor = RegainDarkBg)
+                ) {
+                    Text("Understood")
+                }
+            },
+            containerColor = RegainSurface
+        )
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -79,7 +129,7 @@ fun HomeScreen(viewModel: MainViewModel) {
     ) {
         item {
             Spacer(modifier = Modifier.height(12.dp))
-            // Regain Header with Protection Status
+            // Regain Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -87,48 +137,190 @@ fun HomeScreen(viewModel: MainViewModel) {
             ) {
                 Column {
                     Text(
-                        text = "Regain",
+                        text = "StrictLock",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = RegainTextPrimary,
                         letterSpacing = (-0.5).sp
                     )
                     Text(
-                        text = "Mindful Screen Time & Focus",
+                        text = "Mindful Screen Time & Hard Lock Engine",
                         fontSize = 13.sp,
                         color = RegainTextMuted
                     )
                 }
+            }
+        }
 
-                // Status chip
-                val isStrictActive = regainSettings.uninstallProtectionEnabled
-                Box(
+        // STRICT MODE FEATURE AT THE VERY FIRST OF THE PAGE
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = RegainSurface),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.5f) else RegainMint.copy(alpha = 0.5f)
+                )
+            ) {
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (isStrictActive) RegainSurfaceVariant else RegainAmber.copy(alpha = 0.15f))
-                        .border(
-                            1.dp,
-                            if (isStrictActive) RegainMint.copy(alpha = 0.5f) else RegainAmber.copy(alpha = 0.5f),
-                            RoundedCornerShape(20.dp)
-                        )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .fillMaxWidth()
+                        .padding(20.dp)
                 ) {
+                    // Header Row with Status Badge
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.15f)
+                                        else RegainMint.copy(alpha = 0.15f)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isStrictModeLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                                    contentDescription = null,
+                                    tint = if (isStrictModeLocked) RegainCrimson else RegainMint,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "STRICT MODE",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp,
+                                    color = RegainTextPrimary
+                                )
+                                Text(
+                                    text = if (isStrictModeLocked) "Anti-Uninstall Enforced" else "Safe to Uninstall",
+                                    fontSize = 11.sp,
+                                    color = if (isStrictModeLocked) RegainCrimson else RegainMintLight
+                                )
+                            }
+                        }
+
+                        // Status Badge
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(if (isStrictActive) RegainMint else RegainAmber)
-                        )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.15f)
+                                    else RegainMint.copy(alpha = 0.15f)
+                                )
+                                .border(
+                                    1.dp,
+                                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.4f)
+                                    else RegainMint.copy(alpha = 0.4f),
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isStrictModeLocked) Icons.Default.Lock else Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = if (isStrictModeLocked) RegainCrimson else RegainMint,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Text(
+                                    text = if (isStrictModeLocked) "LOCKED" else "UNLOCKED",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isStrictModeLocked) RegainCrimson else RegainMintLight
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Description text
+                    Text(
+                        text = if (isStrictModeLocked) {
+                            if (strictAppsCount > 0)
+                                "$strictAppsCount app(s) are actively locked under strict plan. Anti-uninstall and Device Admin protections are strictly engaged."
+                            else
+                                "Strict Mode Plan is active. Uninstallation and settings tampering are blocked until turned off."
+                        } else {
+                            "No apps are currently under a strict plan. Device Admin and anti-uninstall protections are released; StrictLock can be uninstalled freely."
+                        },
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        color = RegainTextSecondary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Toggle & Actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = if (isStrictActive) "Strict Mode Active" else "Shields Partial",
-                            fontSize = 12.sp,
+                            text = "Strict Mode Protection",
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isStrictActive) RegainMintLight else RegainAmber
+                            color = RegainTextPrimary
                         )
+
+                        Switch(
+                            checked = isStrictModeLocked,
+                            onCheckedChange = { targetOn ->
+                                if (!targetOn && strictAppsCount > 0) {
+                                    showCannotDisableDialog = true
+                                } else {
+                                    viewModel.toggleUninstallProtection(context)
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = RegainMint,
+                                checkedTrackColor = RegainSurfaceVariant,
+                                uncheckedThumbColor = RegainTextMuted,
+                                uncheckedTrackColor = RegainSurfaceVariant
+                            )
+                        )
+                    }
+
+                    // If safe to uninstall, provide direct button
+                    if (!isStrictModeLocked) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { viewModel.triggerAppUninstall(context) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = RegainSurfaceVariant,
+                                contentColor = RegainCrimson
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Uninstall StrictLock App",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

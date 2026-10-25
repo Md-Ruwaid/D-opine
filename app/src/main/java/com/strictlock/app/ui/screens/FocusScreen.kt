@@ -30,6 +30,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -142,31 +144,94 @@ fun FocusScreen(viewModel: MainViewModel) {
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // Duration Selection Chips
+        // Focus Duration Slider (1 min to 1 Day / 1440m)
+        val currentFocusMins = (totalSecs / 60).coerceIn(1, 1440)
+        val durationLabel = when {
+            currentFocusMins == 1440 -> "1 Day (24 hrs)"
+            currentFocusMins < 60 -> "$currentFocusMins min"
+            currentFocusMins % 60 == 0 -> "${currentFocusMins / 60} hrs"
+            else -> "${currentFocusMins / 60}h ${currentFocusMins % 60}m"
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            val options = listOf(15, 25, 45, 60)
-            options.forEach { mins ->
-                val isSelected = (totalSecs / 60) == mins
+            Text(
+                text = "SESSION LENGTH",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = RegainMintLight,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = durationLabel,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = RegainMint
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Slider(
+            value = currentFocusMins.toFloat(),
+            onValueChange = { newVal ->
+                if (!isRunning) {
+                    viewModel.setFocusSessionMinutes(newVal.toInt())
+                }
+            },
+            enabled = !isRunning,
+            valueRange = 1f..1440f,
+            colors = SliderDefaults.colors(
+                thumbColor = RegainMint,
+                activeTrackColor = RegainMint,
+                inactiveTrackColor = RegainSurfaceVariant
+            )
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "1 min", fontSize = 11.sp, color = RegainTextMuted)
+            Text(text = "1 Day (1440m)", fontSize = 11.sp, color = RegainTextMuted)
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Quick Preset Chips for Focus Session
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            listOf(1, 15, 25, 45, 60, 120, 240, 1440).forEach { mins ->
+                val isSelected = currentFocusMins == mins
+                val chipText = when (mins) {
+                    1440 -> "1d"
+                    in 60..1439 -> "${mins / 60}h"
+                    else -> "${mins}m"
+                }
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(if (isSelected) RegainMint.copy(alpha = 0.15f) else RegainSurface)
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) RegainMint.copy(alpha = 0.2f) else RegainSurface)
                         .border(
                             1.dp,
                             if (isSelected) RegainMint else RegainCardBorder,
-                            RoundedCornerShape(14.dp)
+                            RoundedCornerShape(8.dp)
                         )
                         .clickable(enabled = !isRunning) {
                             viewModel.setFocusSessionMinutes(mins)
                         }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "${mins}m",
-                        fontSize = 14.sp,
+                        text = chipText,
+                        fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) RegainMintLight else RegainTextSecondary
                     )

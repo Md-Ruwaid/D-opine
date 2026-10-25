@@ -3,6 +3,10 @@ package com.strictlock.app.ui.screens
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,14 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.BatteryAlert
 import androidx.compose.material.icons.outlined.Layers
@@ -37,8 +41,15 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.strictlock.app.ui.theme.RegainAmber
@@ -61,6 +73,17 @@ import com.strictlock.app.ui.theme.RegainTextSecondary
 import com.strictlock.app.ui.viewmodel.MainViewModel
 import com.strictlock.app.ui.viewmodel.PermissionsData
 
+private data class PromptStep(
+    val stepIndex: Int,
+    val title: String,
+    val subtitle: String,
+    val description: String,
+    val icon: ImageVector,
+    val isGranted: Boolean,
+    val note: String? = null,
+    val onGrant: () -> Unit
+)
+
 @Composable
 fun StartupPermissionsGate(
     viewModel: MainViewModel,
@@ -75,338 +98,467 @@ fun StartupPermissionsGate(
         viewModel.refreshPermissions()
     }
 
+    val steps = listOf(
+        PromptStep(
+            stepIndex = 1,
+            title = "Usage Access",
+            subtitle = "Track screen time & enforce limits",
+            description = "StrictLock requires Usage Access to accurately track which apps you use and enforce your daily budgets when limits are reached.",
+            icon = Icons.Outlined.QueryStats,
+            isGranted = permissions.hasUsageAccess,
+            onGrant = { viewModel.openUsageAccessSettings(context) }
+        ),
+        PromptStep(
+            stepIndex = 2,
+            title = "Display Over Other Apps",
+            subtitle = "Mindful pause & lock overlays",
+            description = "Allows StrictLock to present mindful breathing pauses and lock screens directly over restricted apps when time is up.",
+            icon = Icons.Outlined.Layers,
+            isGranted = permissions.hasOverlayPermission,
+            onGrant = { viewModel.openOverlaySettings(context) }
+        ),
+        PromptStep(
+            stepIndex = 3,
+            title = "Accessibility Service",
+            subtitle = "Instant foreground & doomscroll protection",
+            description = "Used to detect foreground switches instantaneously and block YouTube Shorts & Instagram Reels doomscrolling.",
+            icon = Icons.Outlined.Widgets,
+            isGranted = permissions.hasAccessibilityService,
+            note = "OnePlus/Android 14+: If grayed out, open App Info -> tap 3 dots in top right -> Allow restricted settings.",
+            onGrant = { viewModel.openAccessibilitySettings(context) }
+        ),
+        PromptStep(
+            stepIndex = 4,
+            title = "Battery Optimization",
+            subtitle = "Background survival without killing",
+            description = "Exempts StrictLock from aggressive manufacturer battery savers so your locks and screen time tracking don't silently stop.",
+            icon = Icons.Outlined.BatteryAlert,
+            isGranted = permissions.hasBatteryUnrestricted,
+            onGrant = { viewModel.openBatteryOptimizationSettings(context) }
+        ),
+        PromptStep(
+            stepIndex = 5,
+            title = "Notifications",
+            subtitle = "Foreground service & limit warnings",
+            description = "StrictLock sends friendly warnings at 10m and 2m before your app limits expire so you are never abruptly cut off.",
+            icon = Icons.Outlined.Notifications,
+            isGranted = permissions.hasNotificationPermission,
+            onGrant = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    notificationLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    viewModel.openNotificationSettings(context)
+                }
+            }
+        )
+    )
+
+    // Current popup index
+    var currentStepIndex by remember {
+        // Start at first ungranted step
+        val firstUnfinished = steps.indexOfFirst { !it.isGranted }
+        mutableIntStateOf(if (firstUnfinished != -1) firstUnfinished else 0)
+    }
+
+    // Automatically advance if current step gets granted
+    LaunchedEffect(permissions) {
+        if (steps[currentStepIndex].isGranted && !permissions.requiredGranted) {
+            val nextUnfinished = steps.indexOfFirst { !it.isGranted }
+            if (nextUnfinished != -1) {
+                currentStepIndex = nextUnfinished
+            }
+        }
+    }
+
+    val totalSteps = steps.size
+    val grantedCount = steps.count { it.isGranted }
+    val progress = (grantedCount.toFloat() / totalSteps).coerceIn(0f, 1f)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(RegainDarkBg)
+            .padding(20.dp),
+        contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // App Brand Icon
+            // App Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(14.dp))
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(RegainSurfaceVariant)
-                        .border(1.dp, RegainCardBorder, RoundedCornerShape(14.dp)),
+                        .border(1.dp, RegainCardBorder, RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Security,
                         contentDescription = null,
                         tint = RegainMint,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 Text(
-                    text = "Welcome to StrictLock",
-                    fontSize = 26.sp,
+                    text = "StrictLock Setup",
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = RegainTextPrimary,
-                    letterSpacing = (-0.5).sp
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "StrictLock requires 5 essential subsystem permissions to track usage, block doomscrolling, and enforce mindful pauses.",
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    color = RegainTextSecondary
+                    color = RegainTextPrimary
                 )
             }
 
-            // Progress Banner
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                    border = androidx.compose.foundation.BorderStroke(
-                        1.dp,
-                        if (permissions.requiredGranted) RegainMint else RegainAmber
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Step Progress Bar & Indicators
+            Row(
+                modifier = Modifier.fillMaxWidth(0.9f),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (permissions.requiredGranted) "Ready to Enter" else "Step ${currentStepIndex + 1} of $totalSteps",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = RegainMintLight
+                )
+                Text(
+                    text = "$grantedCount / $totalSteps Granted",
+                    fontSize = 12.sp,
+                    color = RegainTextMuted
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = if (permissions.requiredGranted) RegainMint else RegainAmber,
+                trackColor = RegainSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // MAIN PROMPT WINDOW POPUP CARD
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = RegainSurface),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    if (permissions.requiredGranted) RegainMint.copy(alpha = 0.5f) else RegainCardBorder
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                ) {
+                    if (permissions.requiredGranted) {
+                        // CELEBRATION READY POPUP
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(68.dp)
+                                    .clip(CircleShape)
+                                    .background(RegainMint.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = RegainMint,
+                                    modifier = Modifier.size(40.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Text(
+                                text = "Setup Complete!",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                color = RegainTextPrimary
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "All 5 essential subsystem accesses have been successfully configured. StrictLock is ready to protect your screen time.",
+                                fontSize = 13.sp,
+                                lineHeight = 19.sp,
+                                textAlign = TextAlign.Center,
+                                color = RegainTextSecondary
+                            )
+
+                            Spacer(modifier = Modifier.height(26.dp))
+
+                            Button(
+                                onClick = onContinue,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = RegainMint,
+                                    contentColor = RegainDarkBg
+                                )
+                            ) {
+                                Text(
+                                    text = "Enter StrictLock →",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+                        }
+                    } else {
+                        // INDIVIDUAL PERMISSION PROMPT POPUP
+                        val step = steps[currentStepIndex]
+                        AnimatedContent(
+                            targetState = step,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "prompt_step"
+                        ) { targetStep ->
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Glowing Permission Icon
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (targetStep.isGranted) RegainMint.copy(alpha = 0.15f)
+                                            else RegainAmber.copy(alpha = 0.15f)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = targetStep.icon,
+                                        contentDescription = null,
+                                        tint = if (targetStep.isGranted) RegainMint else RegainAmber,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Title & Subtitle
+                                Text(
+                                    text = targetStep.title,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = RegainTextPrimary
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = targetStep.subtitle,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (targetStep.isGranted) RegainMintLight else RegainAmber
+                                )
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                // Description
+                                Text(
+                                    text = targetStep.description,
+                                    fontSize = 13.sp,
+                                    lineHeight = 19.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = RegainTextSecondary
+                                )
+
+                                if (targetStep.note != null && !targetStep.isGranted) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(RegainSurfaceVariant)
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(
+                                            text = targetStep.note,
+                                            fontSize = 11.sp,
+                                            lineHeight = 15.sp,
+                                            color = RegainTextMuted
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Primary Grant Action Button
+                                Button(
+                                    onClick = targetStep.onGrant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(50.dp),
+                                    shape = RoundedCornerShape(14.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (targetStep.isGranted) RegainSurfaceVariant else RegainMint,
+                                        contentColor = if (targetStep.isGranted) RegainMintLight else RegainDarkBg
+                                    )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (targetStep.isGranted) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null,
+                                                tint = RegainMint,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Text(
+                                                text = "Granted ✓",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        } else {
+                                            Text(
+                                                text = "Grant ${targetStep.title}",
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                // Wizard Navigation Controls
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    TextButton(
+                                        onClick = {
+                                            if (currentStepIndex > 0) currentStepIndex--
+                                        },
+                                        enabled = currentStepIndex > 0
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Text("Previous", fontSize = 12.sp)
+                                        }
+                                    }
+
+                                    // Dots indicator
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        steps.forEachIndexed { idx, s ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(if (idx == currentStepIndex) 8.dp else 6.dp)
+                                                    .clip(CircleShape)
+                                                    .background(
+                                                        when {
+                                                            s.isGranted -> RegainMint
+                                                            idx == currentStepIndex -> RegainMintLight
+                                                            else -> RegainCardBorder
+                                                        }
+                                                    )
+                                                    .clickable { currentStepIndex = idx }
+                                            )
+                                        }
+                                    }
+
+                                    TextButton(
+                                        onClick = {
+                                            if (currentStepIndex < totalSteps - 1) currentStepIndex++
+                                        },
+                                        enabled = currentStepIndex < totalSteps - 1
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text("Next", fontSize = 12.sp)
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Optional Device Admin card reminder below popup
+            if (permissions.requiredGranted && !permissions.hasDeviceAdmin) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(RegainSurfaceVariant)
+                        .clickable { viewModel.openDeviceAdminSettings(context) }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    if (permissions.requiredGranted) RegainMint.copy(alpha = 0.15f)
-                                    else RegainAmber.copy(alpha = 0.15f)
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (permissions.requiredGranted) Icons.Default.Check else Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = if (permissions.requiredGranted) RegainMint else RegainAmber,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
+                        Icon(
+                            imageVector = Icons.Outlined.Security,
+                            contentDescription = null,
+                            tint = RegainAmber,
+                            modifier = Modifier.size(18.dp)
+                        )
                         Column {
                             Text(
-                                text = if (permissions.requiredGranted) "Ready to Enter" else "${permissions.remainingRequiredCount} Required Permission(s) Remaining",
-                                fontSize = 14.sp,
+                                text = "Device Admin (Optional)",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (permissions.requiredGranted) RegainMintLight else RegainAmber
+                                color = RegainTextPrimary
                             )
                             Text(
-                                text = if (permissions.requiredGranted) "All required permissions granted." else "Tap each card below to grant required access.",
-                                fontSize = 12.sp,
+                                text = "Engages uninstallation prevention when strict mode is active.",
+                                fontSize = 11.sp,
                                 color = RegainTextMuted
                             )
                         }
                     }
-                }
-            }
-
-            // 1. Usage Access (REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "1. Usage Access",
-                    description = "Required to calculate foreground app screen time and enforce daily limits.",
-                    granted = permissions.hasUsageAccess,
-                    isRequired = true,
-                    icon = Icons.Outlined.QueryStats,
-                    onClick = { viewModel.openUsageAccessSettings(context) }
-                )
-            }
-
-            // 2. Display Over Apps (REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "2. Display Over Other Apps",
-                    description = "Required for mindful breathing pause overlays and blocking screens.",
-                    granted = permissions.hasOverlayPermission,
-                    isRequired = true,
-                    icon = Icons.Outlined.Layers,
-                    onClick = { viewModel.openOverlaySettings(context) }
-                )
-            }
-
-            // 3. Accessibility Service (REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "3. Accessibility Service",
-                    description = "Required to block YouTube Shorts & Instagram Reels doomscrolling.",
-                    granted = permissions.hasAccessibilityService,
-                    isRequired = true,
-                    icon = Icons.Outlined.Widgets,
-                    note = "OnePlus/Android 16: If restricted, tap 3 dots in App Info -> Allow restricted settings.",
-                    onClick = { viewModel.openAccessibilitySettings(context) }
-                )
-            }
-
-            // 4. Battery Optimization (REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "4. Ignore Battery Optimizations",
-                    description = "Exempts StrictLock from aggressive OnePlus task killers so locks stay active.",
-                    granted = permissions.hasBatteryUnrestricted,
-                    isRequired = true,
-                    icon = Icons.Outlined.BatteryAlert,
-                    onClick = { viewModel.openBatteryOptimizationSettings(context) }
-                )
-            }
-
-            // 5. Notifications (REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "5. Notification Permission",
-                    description = "Keeps foreground service active and alerts when screen time limit is nearing.",
-                    granted = permissions.hasNotificationPermission,
-                    isRequired = true,
-                    icon = Icons.Outlined.Notifications,
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            notificationLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            viewModel.openNotificationSettings(context)
-                        }
-                    }
-                )
-            }
-
-            // 6. Device Administrator (OPTIONAL - NOT REQUIRED)
-            item {
-                GatePermissionItem(
-                    title = "6. Device Admin",
-                    description = "Advanced anti-uninstall shield. Optional: can be enabled now or skipped.",
-                    granted = permissions.hasDeviceAdmin,
-                    isRequired = false,
-                    icon = Icons.Outlined.Security,
-                    onClick = { viewModel.openDeviceAdminSettings(context) }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
-        }
-
-        // Sticky Bottom Enter Button
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(RegainDarkBg)
-                .border(1.dp, RegainCardBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .padding(16.dp)
-        ) {
-            Button(
-                onClick = onContinue,
-                enabled = permissions.requiredGranted,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = RegainMint,
-                    disabledContainerColor = RegainSurfaceVariant
-                )
-            ) {
-                Text(
-                    text = if (permissions.requiredGranted) "Enter StrictLock →" else "Grant ${permissions.remainingRequiredCount} Required Permission(s)",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (permissions.requiredGranted) Color.Black else RegainTextMuted
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun GatePermissionItem(
-    title: String,
-    description: String,
-    granted: Boolean,
-    isRequired: Boolean,
-    icon: ImageVector,
-    note: String? = null,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = RegainSurface),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (granted) RegainMint.copy(alpha = 0.4f) else RegainCardBorder
-        )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(RegainSurfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (granted) RegainMint else RegainTextMuted,
-                        modifier = Modifier.size(19.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = title,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RegainTextPrimary
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(
-                                    if (isRequired) RegainAmber.copy(alpha = 0.15f)
-                                    else RegainSurfaceVariant
-                                )
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = if (isRequired) "REQUIRED" else "OPTIONAL",
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = if (isRequired) RegainAmber else RegainTextMuted
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(3.dp))
-
                     Text(
-                        text = description,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp,
-                        color = RegainTextSecondary
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (granted) RegainMint.copy(alpha = 0.15f)
-                            else if (isRequired) RegainAmber.copy(alpha = 0.15f)
-                            else RegainSurfaceVariant
-                        )
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = if (granted) "Active ✓" else if (isRequired) "Grant" else "Optional",
+                        text = "Enable",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (granted) RegainMintLight else if (isRequired) RegainAmber else RegainTextMuted
+                        color = RegainMintLight
                     )
                 }
-            }
-
-            if (!granted && note != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = note,
-                    fontSize = 11.sp,
-                    color = RegainAmber,
-                    lineHeight = 15.sp
-                )
             }
         }
     }

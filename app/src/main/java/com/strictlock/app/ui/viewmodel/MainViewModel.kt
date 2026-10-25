@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -186,8 +187,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         regainPreferences.updateMindfulPause(!regainSettings.value.mindfulPauseEnabled)
     }
 
-    fun toggleUninstallProtection() {
-        regainPreferences.updateUninstallProtection(!regainSettings.value.uninstallProtectionEnabled)
+    fun toggleUninstallProtection(context: Context? = null) {
+        val current = regainSettings.value.uninstallProtectionEnabled
+        val newTarget = !current
+        if (!newTarget) {
+            // User wants to disable Strict Mode: check if any apps are currently under a strict rule
+            val hasStrictRules = activeRules.value.any { it.rule.isStrict }
+            if (hasStrictRules) {
+                // Cannot disable while rules are active
+                return
+            }
+            regainPreferences.updateUninstallProtection(false)
+            deactivateDeviceAdmin()
+        } else {
+            regainPreferences.updateUninstallProtection(true)
+            if (context != null && !permissions.value.hasDeviceAdmin) {
+                openDeviceAdminSettings(context)
+            }
+        }
+    }
+
+    fun deactivateDeviceAdmin() {
+        try {
+            val context = getApplication<Application>()
+            val dpm = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as? DevicePolicyManager
+            val componentName = ComponentName(context, StrictLockDeviceAdminReceiver::class.java)
+            if (dpm != null && dpm.isAdminActive(componentName)) {
+                dpm.removeActiveAdmin(componentName)
+            }
+            refreshPermissions()
+        } catch (_: Exception) {}
+    }
+
+    fun triggerAppUninstall(context: Context) {
+        deactivateDeviceAdmin()
+        try {
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:${context.packageName}")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            openApplicationDetailsSettings(context)
+        }
     }
 
     fun toggleSplitScreenProtection() {
@@ -206,13 +248,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         regainPreferences.updateFocusStrict(!regainSettings.value.focusTimerStrictEnabled)
     }
 
-    // Regain Focus Timer Controls
+    // Regain Focus Timer Controls (Allows 1 min up to 1440 min / 1 Day)
     fun setFocusSessionMinutes(minutes: Int) {
         if (_isFocusTimerRunning.value) return
-        val totalSecs = minutes * 60
+        val clamped = minutes.coerceIn(1, 1440)
+        val totalSecs = clamped * 60
         _focusSessionTotalSeconds.value = totalSecs
         _focusSecondsRemaining.value = totalSecs
-        regainPreferences.updateFocusMinutes(minutes)
+        regainPreferences.updateFocusMinutes(clamped)
     }
 
     fun startFocusSession() {
@@ -277,6 +320,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         initialValue = emptyList()
     )
 
+    val hasStrictRules: StateFlow<Boolean> = activeRules.map { rules ->
+        rules.any { it.rule.isStrict }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val strictAppsCount: StateFlow<Int> = activeRules.map { rules ->
+        rules.count { it.rule.isStrict }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    val isStrictModeLocked: StateFlow<Boolean> = combine(
+        hasStrictRules,
+        regainSettings
+    ) { strictActive, settings ->
+        strictActive || settings.uninstallProtectionEnabled
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     private fun loadInstalledApps() {
         viewModelScope.launch {
             _installedApps.value = appsRepository.getInstalledLaunchableApps()
@@ -303,6 +361,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         mode: RuleMode
     ) {
         viewModelScope.launch {
+            if (mode == RuleMode.STRICT) {
+                regainPreferences.updateUninstallProtection(true)
+            }
             ruleRepository.createRule(
                 packageName = packageName,
                 appName = appName,

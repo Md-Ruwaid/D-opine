@@ -39,12 +39,15 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -720,36 +723,97 @@ private fun AddRuleSheetContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Daily Limit Selection
-            Text(
-                text = "DAILY BUDGET: ${hours}h ${minutes}m",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = RegainMintLight,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // Daily Limit Selection with Slider (1 min to 1 Day / 1440m)
+            var totalLimitMinsFloat by remember {
+                val initMins = (hours * 60 + minutes).coerceIn(1, 1440)
+                mutableFloatStateOf(initMins.toFloat())
+            }
+            val currentMinsInt = totalLimitMinsFloat.toInt().coerceIn(1, 1440)
+            val budgetLabel = when {
+                currentMinsInt == 1440 -> "1 Day (24 hrs)"
+                currentMinsInt < 60 -> "$currentMinsInt min"
+                currentMinsInt % 60 == 0 -> "${currentMinsInt / 60} hrs"
+                else -> "${currentMinsInt / 60}h ${currentMinsInt % 60}m"
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                listOf(15, 30, 45, 60, 90).forEach { mins ->
-                    val isSelected = (hours * 60 + minutes) == mins
+                Text(
+                    text = "DAILY BUDGET",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = RegainMintLight,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = budgetLabel,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = RegainMint
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Slider(
+                value = totalLimitMinsFloat,
+                onValueChange = { newVal ->
+                    totalLimitMinsFloat = newVal
+                    val intMins = newVal.toInt().coerceIn(1, 1440)
+                    hours = intMins / 60
+                    minutes = intMins % 60
+                },
+                valueRange = 1f..1440f,
+                colors = SliderDefaults.colors(
+                    thumbColor = RegainMint,
+                    activeTrackColor = RegainMint,
+                    inactiveTrackColor = RegainSurfaceVariant
+                )
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "1 min", fontSize = 11.sp, color = RegainTextMuted)
+                Text(text = "1 Day (1440m)", fontSize = 11.sp, color = RegainTextMuted)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quick Preset Chips for Daily Budget
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf(1, 5, 15, 30, 60, 120, 240, 1440).forEach { mins ->
+                    val isSelected = currentMinsInt == mins
+                    val chipText = when (mins) {
+                        1440 -> "1d"
+                        in 60..1439 -> "${mins / 60}h"
+                        else -> "${mins}m"
+                    }
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(if (isSelected) RegainMint.copy(alpha = 0.2f) else RegainSurfaceVariant)
-                            .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(10.dp))
+                            .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(8.dp))
                             .clickable {
+                                totalLimitMinsFloat = mins.toFloat()
                                 hours = mins / 60
                                 minutes = mins % 60
                             }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "${mins}m",
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            text = chipText,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) RegainMintLight else RegainTextSecondary
                         )
                     }
@@ -758,33 +822,85 @@ private fun AddRuleSheetContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Calendar Days Selection
-            Text(
-                text = "DURATION: $days CALENDAR DAYS",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = RegainMintLight,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // Calendar Days Selection with Slider (1 to 365 days)
+            var daysFloat by remember { mutableFloatStateOf(days.toFloat().coerceIn(1f, 365f)) }
+            val currentDaysInt = daysFloat.toInt().coerceIn(1, 365)
+            val durationLabel = when (currentDaysInt) {
+                1 -> "1 Calendar Day"
+                365 -> "1 Year (365 Days)"
+                else -> "$currentDaysInt Calendar Days"
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                listOf(7, 14, 30, 90).forEach { d ->
-                    val isSelected = days == d
+                Text(
+                    text = "DURATION",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = RegainMintLight,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = durationLabel,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = RegainMintLight
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Slider(
+                value = daysFloat,
+                onValueChange = { newVal ->
+                    daysFloat = newVal
+                    days = newVal.toInt().coerceIn(1, 365)
+                },
+                valueRange = 1f..365f,
+                colors = SliderDefaults.colors(
+                    thumbColor = RegainMint,
+                    activeTrackColor = RegainMint,
+                    inactiveTrackColor = RegainSurfaceVariant
+                )
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "1 Day", fontSize = 11.sp, color = RegainTextMuted)
+                Text(text = "365 Days (1 Yr)", fontSize = 11.sp, color = RegainTextMuted)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                listOf(1, 7, 14, 30, 90, 180, 365).forEach { d ->
+                    val isSelected = currentDaysInt == d
+                    val chipText = if (d == 365) "1y" else "${d}d"
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
                             .background(if (isSelected) RegainMint.copy(alpha = 0.2f) else RegainSurfaceVariant)
-                            .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(10.dp))
-                            .clickable { days = d }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                            .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(8.dp))
+                            .clickable {
+                                daysFloat = d.toFloat()
+                                days = d
+                            }
+                            .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "${d}d",
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            text = chipText,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                             color = if (isSelected) RegainMintLight else RegainTextSecondary
                         )
                     }
