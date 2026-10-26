@@ -46,13 +46,12 @@ class InstalledAppsRepository(private val context: Context) {
             }
 
             val appName = resolveInfo.loadLabel(packageManager).toString()
-            val icon = resolveInfo.loadIcon(packageManager)
             val isSystem = (resolveInfo.activityInfo.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
 
             val item = AppInfo(
                 packageName = pkg,
                 appName = appName,
-                icon = icon,
+                icon = null,
                 isSystemApp = isSystem
             )
             appCache[pkg] = item

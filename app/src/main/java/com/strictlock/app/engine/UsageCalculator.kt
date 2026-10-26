@@ -27,6 +27,7 @@ class UsageCalculator(private val context: Context) {
 
     // In-memory caches to prevent expensive repeated UsageStatsManager Binder queries
     private val ruleUsageCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Long>>()
+    private val appLabelCache = java.util.concurrent.ConcurrentHashMap<String, String>()
     @Volatile private var cachedScreenTime: Pair<Long, Long>? = null
     @Volatile private var cachedUnlocks: Pair<Long, Int>? = null
     @Volatile private var cachedTopApps: Pair<Long, List<AppUsageStat>>? = null
@@ -50,10 +51,10 @@ class UsageCalculator(private val context: Context) {
         if (rule.isExpired(now)) return 0L
         if (usageStatsManager == null) return 0L
 
-        // Return cached value if queried within 4 seconds
+        // Return cached value if queried within 10 seconds
         val cacheKey = "${rule.id}_${rule.packageName}"
         val cached = ruleUsageCache[cacheKey]
-        if (cached != null && (now - cached.first) < 4000L) {
+        if (cached != null && (now - cached.first) < 10_000L) {
             return cached.second
         }
 
@@ -196,11 +197,13 @@ class UsageCalculator(private val context: Context) {
             .sortedByDescending { it.totalTimeInForeground }
             .take(limit)
             .map { stat ->
-                val label = try {
-                    val appInfo = packageManager.getApplicationInfo(stat.packageName, 0)
-                    packageManager.getApplicationLabel(appInfo).toString()
-                } catch (_: Exception) {
-                    stat.packageName.substringAfterLast('.')
+                val label = appLabelCache.getOrPut(stat.packageName) {
+                    try {
+                        val appInfo = packageManager.getApplicationInfo(stat.packageName, 0)
+                        packageManager.getApplicationLabel(appInfo).toString()
+                    } catch (_: Exception) {
+                        stat.packageName.substringAfterLast('.')
+                    }
                 }
                 AppUsageStat(
                     packageName = stat.packageName,

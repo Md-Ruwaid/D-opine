@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
@@ -625,7 +626,6 @@ private fun AddRuleSheetContent(
     var selectedApps by remember { mutableStateOf<Set<AppInfo>>(emptySet()) }
     var searchQuery by remember { mutableStateOf("") }
 
-    var isInstantLock by remember { mutableStateOf(true) }
     var hours by remember { mutableIntStateOf(0) }
     var minutes by remember { mutableIntStateOf(30) }
     var days by remember { mutableIntStateOf(14) }
@@ -868,6 +868,8 @@ private fun AddRuleSheetContent(
         }
     } else {
         // Step 2: Configure Lock Rules
+        val totalMinutes = hours * 60 + minutes
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -968,213 +970,252 @@ private fun AddRuleSheetContent(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                // Section 1: Lock Mode (Instant Lock vs Daily Budget)
+                // Section 1: Daily Operating Time (Timer)
                 Column {
-                    Text(
-                        text = "LOCK BEHAVIOR",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = RegainMintLight,
-                        letterSpacing = 1.sp
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "DAILY OPERATING TIME (TIMER)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RegainMintLight,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = if (totalMinutes == 0) "0 min (Instant Block)" else if (hours > 0) "${hours}h ${minutes}m / day" else "${minutes}m / day",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (totalMinutes == 0) RegainCrimson else RegainMint
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // Hero Banner Card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (totalMinutes == 0) RegainCrimson.copy(alpha = 0.14f) else RegainMint.copy(alpha = 0.14f))
+                            .border(
+                                1.dp,
+                                if (totalMinutes == 0) RegainCrimson else RegainMint,
+                                RoundedCornerShape(14.dp)
+                            )
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (totalMinutes == 0) Icons.Default.Lock else Icons.Default.HourglassTop,
+                                contentDescription = null,
+                                tint = if (totalMinutes == 0) RegainCrimson else RegainMint,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = if (totalMinutes == 0)
+                                        "Instant Lock (0m Operating Time Allowed)"
+                                    else
+                                        "${if (hours > 0) "${hours} Hour${if (hours > 1) "s" else ""} " else ""}${minutes} Minute${if (minutes != 1) "s" else ""} Daily Allowance",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (totalMinutes == 0) RegainCrimson else RegainMintLight
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (totalMinutes == 0)
+                                        "Apps are blocked immediately whenever opened. 0 operating minutes."
+                                    else
+                                        "You can operate these apps up to this duration each day. Limits reset at midnight.",
+                                    fontSize = 11.sp,
+                                    color = RegainTextSecondary
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Hours & Minutes Steppers
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Instant Full Lock (0 min)
+                        // Hours Stepper
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(if (isInstantLock) RegainCrimson.copy(alpha = 0.16f) else RegainSurfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (isInstantLock) RegainCrimson else RegainCardBorder,
-                                    RoundedCornerShape(14.dp)
-                                )
-                                .clickable { isInstantLock = true }
-                                .padding(12.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(RegainSurfaceVariant)
+                                .border(1.dp, RegainCardBorder, RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
                         ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Lock,
-                                        contentDescription = null,
-                                        tint = RegainCrimson,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = "Instant Lock",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = RegainCrimson
-                                    )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("HOURS", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RegainTextMuted)
+                                    Text("${hours}h", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = RegainTextPrimary)
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "0 min budget. Blocked immediately whenever opened.",
-                                    fontSize = 11.sp,
-                                    lineHeight = 15.sp,
-                                    color = RegainTextSecondary
-                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    IconButton(
+                                        onClick = { if (hours > 0) hours -= 1 },
+                                        enabled = hours > 0,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Remove, contentDescription = "Decrease Hour", tint = if (hours > 0) RegainMintLight else RegainTextMuted)
+                                    }
+                                    IconButton(
+                                        onClick = { if (hours < 23) hours += 1 },
+                                        enabled = hours < 23,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase Hour", tint = if (hours < 23) RegainMintLight else RegainTextMuted)
+                                    }
+                                }
                             }
                         }
 
-                        // Daily Time Limit
+                        // Minutes Stepper
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(if (!isInstantLock) RegainMint.copy(alpha = 0.16f) else RegainSurfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (!isInstantLock) RegainMint else RegainCardBorder,
-                                    RoundedCornerShape(14.dp)
-                                )
-                                .clickable { isInstantLock = false }
-                                .padding(12.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(RegainSurfaceVariant)
+                                .border(1.dp, RegainCardBorder, RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 8.dp)
                         ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.HourglassTop,
-                                        contentDescription = null,
-                                        tint = RegainMint,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Text(
-                                        text = "Daily Limit",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = RegainMint
-                                    )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("MINUTES", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RegainTextMuted)
+                                    Text("${minutes}m", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = RegainTextPrimary)
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Set daily minutes. Locks when usage runs out.",
-                                    fontSize = 11.sp,
-                                    lineHeight = 15.sp,
-                                    color = RegainTextSecondary
-                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    IconButton(
+                                        onClick = {
+                                            if (minutes >= 5) minutes -= 5
+                                            else if (hours > 0) {
+                                                hours -= 1
+                                                minutes = 55
+                                            } else {
+                                                minutes = 0
+                                            }
+                                        },
+                                        enabled = hours > 0 || minutes > 0,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Remove, contentDescription = "Decrease Minute", tint = if (hours > 0 || minutes > 0) RegainMintLight else RegainTextMuted)
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            if (minutes + 5 <= 55) minutes += 5
+                                            else if (hours < 23) {
+                                                hours += 1
+                                                minutes = 0
+                                            }
+                                        },
+                                        enabled = hours < 23 || minutes < 55,
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = "Increase Minute", tint = if (hours < 23 || minutes < 55) RegainMintLight else RegainTextMuted)
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                // If Daily Limit is selected, show Slider & Preset Chips
-                if (!isInstantLock) {
-                    var totalLimitMinsFloat by remember {
-                        val initMins = (hours * 60 + minutes).coerceIn(1, 1440)
-                        mutableFloatStateOf(initMins.toFloat())
-                    }
-                    val currentMinsInt = totalLimitMinsFloat.toInt().coerceIn(1, 1440)
-                    val budgetLabel = when {
-                        currentMinsInt == 1440 -> "1 Day (24 hrs)"
-                        currentMinsInt < 60 -> "$currentMinsInt min"
-                        currentMinsInt % 60 == 0 -> "${currentMinsInt / 60} hrs"
-                        else -> "${currentMinsInt / 60}h ${currentMinsInt % 60}m"
-                    }
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "ALLOWED USAGE PER DAY",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = RegainMintLight,
-                                letterSpacing = 1.sp
-                            )
-                            Text(
-                                text = budgetLabel,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = RegainMint
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Slider(
-                            value = totalLimitMinsFloat,
-                            onValueChange = { newVal ->
-                                totalLimitMinsFloat = newVal
-                                val intMins = newVal.toInt().coerceIn(1, 1440)
-                                hours = intMins / 60
-                                minutes = intMins % 60
-                            },
-                            valueRange = 1f..1440f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = RegainMint,
-                                activeTrackColor = RegainMint,
-                                inactiveTrackColor = RegainSurfaceVariant
-                            )
+                    // Smooth Slider
+                    Slider(
+                        value = totalMinutes.toFloat(),
+                        onValueChange = { newVal ->
+                            val m = newVal.toInt().coerceIn(0, 1440)
+                            hours = m / 60
+                            minutes = m % 60
+                        },
+                        valueRange = 0f..1440f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = if (totalMinutes == 0) RegainCrimson else RegainMint,
+                            activeTrackColor = if (totalMinutes == 0) RegainCrimson else RegainMint,
+                            inactiveTrackColor = RegainSurfaceVariant
                         )
+                    )
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(text = "1 min", fontSize = 11.sp, color = RegainTextMuted)
-                            Text(text = "1 Day (1440m)", fontSize = 11.sp, color = RegainTextMuted)
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "0m (Instant Block)", fontSize = 11.sp, color = if (totalMinutes == 0) RegainCrimson else RegainTextMuted)
+                        Text(text = "24h (1440m)", fontSize = 11.sp, color = RegainTextMuted)
+                    }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf(5, 15, 30, 60, 120, 240, 1440).forEach { mins ->
-                                val isSelected = currentMinsInt == mins
-                                val chipText = when (mins) {
-                                    1440 -> "1d"
-                                    in 60..1439 -> "${mins / 60}h"
-                                    else -> "${mins}m"
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSelected) RegainMint.copy(alpha = 0.2f) else RegainSurfaceVariant)
-                                        .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(8.dp))
-                                        .clickable {
-                                            totalLimitMinsFloat = mins.toFloat()
-                                            hours = mins / 60
-                                            minutes = mins % 60
-                                        }
-                                        .padding(vertical = 6.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = chipText,
-                                        fontSize = 11.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) RegainMintLight else RegainTextSecondary
+                    // Quick Preset Chips
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(0, 15, 30, 45, 60, 120, 240, 1440).forEach { mins ->
+                            val isSelected = totalMinutes == mins
+                            val chipText = when (mins) {
+                                0 -> "0m"
+                                1440 -> "24h"
+                                in 60..1439 -> "${mins / 60}h"
+                                else -> "${mins}m"
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (isSelected) {
+                                            if (mins == 0) RegainCrimson.copy(alpha = 0.25f) else RegainMint.copy(alpha = 0.25f)
+                                        } else RegainSurfaceVariant
                                     )
-                                }
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) (if (mins == 0) RegainCrimson else RegainMint) else RegainCardBorder,
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable {
+                                        hours = mins / 60
+                                        minutes = mins % 60
+                                    }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = chipText,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) {
+                                        if (mins == 0) RegainCrimson else RegainMintLight
+                                    } else RegainTextSecondary
+                                )
                             }
                         }
                     }
                 }
 
                 // Section 2: Duration Slider (1 to 365 Days)
-                var daysFloat by remember { mutableFloatStateOf(days.toFloat().coerceIn(1f, 365f)) }
-                val currentDaysInt = daysFloat.toInt().coerceIn(1, 365)
-                val durationLabel = when (currentDaysInt) {
+                val durationLabel = when (days) {
                     1 -> "1 Calendar Day"
-                    365 -> "1 Year (365 Days)"
-                    else -> "$currentDaysInt Calendar Days"
+                    365 -> "365 Days (1 Year)"
+                    else -> "$days Calendar Days"
                 }
 
                 Column {
@@ -1184,7 +1225,7 @@ private fun AddRuleSheetContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "LOCK DURATION",
+                            text = "LOCK DURATION (CALENDAR DAYS)",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = RegainMintLight,
@@ -1192,18 +1233,56 @@ private fun AddRuleSheetContent(
                         )
                         Text(
                             text = durationLabel,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = RegainMintLight
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Stepper Box for Days
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(RegainSurfaceVariant)
+                            .border(1.dp, RegainCardBorder, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("ACTIVE DURATION", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = RegainTextMuted)
+                                Text(durationLabel, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, color = RegainTextPrimary)
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                IconButton(
+                                    onClick = { if (days > 1) days -= 1 },
+                                    enabled = days > 1,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Remove, contentDescription = "Decrease Day", tint = if (days > 1) RegainMintLight else RegainTextMuted)
+                                }
+                                IconButton(
+                                    onClick = { if (days < 365) days += 1 },
+                                    enabled = days < 365,
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = "Increase Day", tint = if (days < 365) RegainMintLight else RegainTextMuted)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Slider(
-                        value = daysFloat,
+                        value = days.toFloat(),
                         onValueChange = { newVal ->
-                            daysFloat = newVal
                             days = newVal.toInt().coerceIn(1, 365)
                         },
                         valueRange = 1f..365f,
@@ -1228,19 +1307,16 @@ private fun AddRuleSheetContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        listOf(1, 7, 14, 30, 90, 180, 365).forEach { d ->
-                            val isSelected = currentDaysInt == d
+                        listOf(1, 3, 7, 14, 30, 90, 180, 365).forEach { d ->
+                            val isSelected = days == d
                             val chipText = if (d == 365) "1y" else "${d}d"
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) RegainMint.copy(alpha = 0.2f) else RegainSurfaceVariant)
+                                    .background(if (isSelected) RegainMint.copy(alpha = 0.25f) else RegainSurfaceVariant)
                                     .border(1.dp, if (isSelected) RegainMint else RegainCardBorder, RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        daysFloat = d.toFloat()
-                                        days = d
-                                    }
+                                    .clickable { days = d }
                                     .padding(vertical = 6.dp),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -1275,13 +1351,13 @@ private fun AddRuleSheetContent(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(if (selectedMode == RuleMode.STRICT) RegainCrimson.copy(alpha = 0.15f) else RegainSurfaceVariant)
-                            .border(
-                                1.dp,
-                                if (selectedMode == RuleMode.STRICT) RegainCrimson else RegainCardBorder,
-                                RoundedCornerShape(14.dp)
-                            )
-                            .clickable { selectedMode = RuleMode.STRICT }
-                            .padding(14.dp)
+                                .border(
+                                    1.dp,
+                                    if (selectedMode == RuleMode.STRICT) RegainCrimson else RegainCardBorder,
+                                    RoundedCornerShape(14.dp)
+                                )
+                                .clickable { selectedMode = RuleMode.STRICT }
+                                .padding(14.dp)
                         ) {
                             Column {
                                 Text(
@@ -1305,13 +1381,13 @@ private fun AddRuleSheetContent(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(if (selectedMode == RuleMode.CASUAL) RegainAmber.copy(alpha = 0.15f) else RegainSurfaceVariant)
-                            .border(
-                                1.dp,
-                                if (selectedMode == RuleMode.CASUAL) RegainAmber else RegainCardBorder,
-                                RoundedCornerShape(14.dp)
-                            )
-                            .clickable { selectedMode = RuleMode.CASUAL }
-                            .padding(14.dp)
+                                .border(
+                                    1.dp,
+                                    if (selectedMode == RuleMode.CASUAL) RegainAmber else RegainCardBorder,
+                                    RoundedCornerShape(14.dp)
+                                )
+                                .clickable { selectedMode = RuleMode.CASUAL }
+                                .padding(14.dp)
                         ) {
                             Column {
                                 Text(
@@ -1339,7 +1415,7 @@ private fun AddRuleSheetContent(
             // STICKY CONFIRM & LOCK BUTTON
             Button(
                 onClick = {
-                    val finalLimitMins = if (isInstantLock) 0L else (hours * 60L + minutes)
+                    val finalLimitMins = (hours * 60L + minutes)
                     if (selectedApps.isNotEmpty()) {
                         onConfirm(
                             selectedApps.toList(),
@@ -1351,27 +1427,35 @@ private fun AddRuleSheetContent(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(26.dp),
+                    .height(54.dp),
+                shape = RoundedCornerShape(27.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = RegainMint,
                     contentColor = RegainDarkBg
                 )
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "LOCK ${selectedApps.size} APP${if (selectedApps.size > 1) "S" else ""} FOR $days DAYS",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
                     Text(
-                        text = "LOCK ${selectedApps.size} APP${if (selectedApps.size > 1) "S" else ""} NOW",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.sp
+                        text = if (totalMinutes == 0) "Instant Lock (0m daily allowance)" else "${if (hours > 0) "${hours}h " else ""}${minutes}m daily operating allowance",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = RegainDarkBg.copy(alpha = 0.85f)
                     )
                 }
             }

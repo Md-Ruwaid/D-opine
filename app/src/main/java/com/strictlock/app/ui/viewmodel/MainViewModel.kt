@@ -149,11 +149,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshPermissions()
         refreshDashboardMetrics()
 
-        // 1-second ticker to keep active rules, cooldowns, and metrics live
+        // Adaptive ticker: 1-second ticks only during casual cooldowns, 10s otherwise to prevent UI lag
         viewModelScope.launch(Dispatchers.Default) {
             while (isActive) {
                 tickerFlow.value = System.currentTimeMillis()
-                delay(1000L)
+                val hasActiveCooldown = ruleRepository.getActiveRules().any { it.isCasual && it.cooldownStartTime != null }
+                delay(if (hasActiveCooldown) 1000L else 10_000L)
             }
         }
 
@@ -294,7 +295,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val usedMs = usageCalculator.calculateTodayUsageMs(rule, now)
             val usedMins = usedMs / (1000 * 60)
             val daysLeft = rule.getRemainingCalendarDays(now)
-            val icon = appsRepository.getAppInfo(rule.packageName)?.icon
             val isBlocked = usedMins >= rule.dailyLimitMinutes
 
             val cooldown = rule.cooldownStartTime
@@ -309,7 +309,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 usedMinutesToday = usedMins,
                 limitMinutes = rule.dailyLimitMinutes,
                 daysLeft = daysLeft,
-                icon = icon,
+                icon = null,
                 isBlocked = isBlocked,
                 casualRemainingMs = casualRemainingMs
             )
