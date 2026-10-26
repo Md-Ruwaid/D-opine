@@ -1,6 +1,11 @@
 package com.strictlock.app.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,12 +25,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
@@ -44,28 +49,54 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import com.strictlock.app.ui.theme.RegainCrimson
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.strictlock.app.ui.components.AppIconImage
-import com.strictlock.app.ui.theme.RegainAmber
-import com.strictlock.app.ui.theme.RegainCardBorder
-import com.strictlock.app.ui.theme.RegainDarkBg
-import com.strictlock.app.ui.theme.RegainMint
-import com.strictlock.app.ui.theme.RegainMintLight
-import com.strictlock.app.ui.theme.RegainSurface
-import com.strictlock.app.ui.theme.RegainSurfaceVariant
-import com.strictlock.app.ui.theme.RegainTextMuted
-import com.strictlock.app.ui.theme.RegainTextPrimary
-import com.strictlock.app.ui.theme.RegainTextSecondary
+import com.strictlock.app.ui.theme.*
 import com.strictlock.app.ui.viewmodel.MainViewModel
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.TextStyle
+
+@Composable
+fun OdometerText(
+    text: String,
+    style: TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    AnimatedContent(
+        targetState = text,
+        transitionSpec = {
+            (slideInVertically(animationSpec = MotionPhysics.iosFluidIntOffsetSpring) { -it } + fadeIn())
+                .togetherWith(slideOutVertically(animationSpec = MotionPhysics.iosFluidIntOffsetSpring) { it } + fadeOut())
+        },
+        label = "odometer_anim",
+        modifier = modifier
+    ) { animatedText ->
+        Text(
+            text = animatedText,
+            style = style,
+            color = color
+        )
+    }
+}
 
 @Composable
 fun HomeScreen(viewModel: MainViewModel) {
@@ -89,45 +120,96 @@ fun HomeScreen(viewModel: MainViewModel) {
 
     var showCannotDisableDialog by remember { mutableStateOf(false) }
 
+    // Staggered Entrance Animations (45ms cadence per section)
+    var isLoaded by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isLoaded = true
+    }
+
+    val s0Alpha by animateFloatAsState(targetValue = if (isLoaded) 1f else 0f, animationSpec = tween(320, 0, FastOutSlowInEasing), label = "s0A")
+    val s0Y by animateFloatAsState(targetValue = if (isLoaded) 0f else 24f, animationSpec = MotionPhysics.iosFluidSpring, label = "s0Y")
+
+    val s1Alpha by animateFloatAsState(targetValue = if (isLoaded) 1f else 0f, animationSpec = tween(320, 45, FastOutSlowInEasing), label = "s1A")
+    val s1Y by animateFloatAsState(targetValue = if (isLoaded) 0f else 24f, animationSpec = MotionPhysics.iosFluidSpring, label = "s1Y")
+
+    val s2Alpha by animateFloatAsState(targetValue = if (isLoaded) 1f else 0f, animationSpec = tween(320, 90, FastOutSlowInEasing), label = "s2A")
+    val s2Y by animateFloatAsState(targetValue = if (isLoaded) 0f else 24f, animationSpec = MotionPhysics.iosFluidSpring, label = "s2Y")
+
+    val s3Alpha by animateFloatAsState(targetValue = if (isLoaded) 1f else 0f, animationSpec = tween(320, 135, FastOutSlowInEasing), label = "s3A")
+    val s3Y by animateFloatAsState(targetValue = if (isLoaded) 0f else 24f, animationSpec = MotionPhysics.iosFluidSpring, label = "s3Y")
+
+    val s4Alpha by animateFloatAsState(targetValue = if (isLoaded) 1f else 0f, animationSpec = tween(320, 180, FastOutSlowInEasing), label = "s4A")
+    val s4Y by animateFloatAsState(targetValue = if (isLoaded) 0f else 24f, animationSpec = MotionPhysics.iosFluidSpring, label = "s4Y")
+
+    // Subtle pulsing dot animation for the top integrity status badge
+    val infiniteTransition = rememberInfiniteTransition(label = "integrity_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+
     if (showCannotDisableDialog) {
         AlertDialog(
             onDismissRequest = { showCannotDisableDialog = false },
             title = {
-                Text(
-                    text = "Strict Mode Protected",
-                    fontWeight = FontWeight.Bold,
-                    color = RegainTextPrimary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = AuthorityIndigo,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Strict Mode Protected",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = AlabasterText
+                    )
+                }
             },
             text = {
                 Text(
-                    text = "You currently have $strictAppsCount app(s) locked under strict rules. In accordance with StrictLock, strict mode and uninstall protection cannot be deactivated until rules expire or through Emergency Reset.",
+                    text = "You currently have $strictAppsCount app(s) locked under strict rules. To protect your commitment against impulse, Strict Mode and uninstall protection cannot be deactivated until rules expire or through Emergency Reset.",
                     fontSize = 13.sp,
-                    color = RegainTextSecondary
+                    lineHeight = 19.sp,
+                    color = MutedSlateText
                 )
             },
             confirmButton = {
                 Button(
                     onClick = { showCannotDisableDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = RegainMint, contentColor = RegainDarkBg)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ParasympatheticSage,
+                        contentColor = DeepObsidian
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Understood")
+                    Text("Understood", fontWeight = FontWeight.Bold)
                 }
             },
-            containerColor = RegainSurface
+            containerColor = InteractiveSurface,
+            shape = RoundedCornerShape(20.dp)
         )
     }
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(RegainDarkBg)
+            .background(DeepObsidian)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // App Header
         item {
             Spacer(modifier = Modifier.height(12.dp))
-            // Regain Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -136,37 +218,47 @@ fun HomeScreen(viewModel: MainViewModel) {
                 Column {
                     Text(
                         text = "StrictLock",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = RegainTextPrimary,
-                        letterSpacing = (-0.5).sp
+                        fontSize = 28.sp,
+                        lineHeight = 36.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AlabasterText,
+                        letterSpacing = (-0.25).sp
                     )
                     Text(
-                        text = "Mindful Screen Time & Hard Lock Engine",
+                        text = "Neuro-Ergonomic Habit Architecture",
                         fontSize = 13.sp,
-                        color = RegainTextMuted
+                        lineHeight = 18.sp,
+                        color = MutedSlateText
                     )
                 }
             }
         }
 
-        // STRICT MODE FEATURE AT THE VERY FIRST OF THE PAGE
+        // =========================================================================
+        // 1. TOP INTEGRITY BANNER (High-Effort / Deliberate Zone: Top 25%)
+        // High-consequence controls placed at the top introduce physical friction
+        // =========================================================================
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = RegainSurface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = s0Alpha
+                        translationY = s0Y
+                    },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.5f) else RegainMint.copy(alpha = 0.5f)
+                    if (isStrictModeLocked) AuthorityIndigo.copy(alpha = 0.5f) else SubtleHairline
                 )
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp)
+                        .padding(18.dp)
                 ) {
-                    // Header Row with Status Badge
+                    // Header Row with Pulsing Integrity Status Badge
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -178,103 +270,105 @@ fun HomeScreen(viewModel: MainViewModel) {
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
                                     .background(
-                                        if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.15f)
-                                        else RegainMint.copy(alpha = 0.15f)
+                                        if (isStrictModeLocked) AuthorityIndigo.copy(alpha = 0.16f)
+                                        else ParasympatheticSage.copy(alpha = 0.16f)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = if (isStrictModeLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                                     contentDescription = null,
-                                    tint = if (isStrictModeLocked) RegainCrimson else RegainMint,
+                                    tint = if (isStrictModeLocked) AuthorityIndigo else ParasympatheticSage,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
+
                             Column {
                                 Text(
-                                    text = "STRICT MODE",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Black,
+                                    text = "STRICT SHIELD INTEGRITY",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
-                                    color = RegainTextPrimary
+                                    color = AlabasterText
                                 )
                                 Text(
-                                    text = if (isStrictModeLocked) "Anti-Uninstall Enforced" else "Safe to Uninstall",
+                                    text = if (isStrictModeLocked) "Anti-Uninstall Armed" else "Safe to Reconfigure / Uninstall",
                                     fontSize = 11.sp,
-                                    color = if (isStrictModeLocked) RegainCrimson else RegainMintLight
+                                    color = if (isStrictModeLocked) AuthorityIndigo else ParasympatheticSageLight
                                 )
                             }
                         }
 
-                        // Status Badge
+                        // Pulsing Status Micro-Pill
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.15f)
-                                    else RegainMint.copy(alpha = 0.15f)
+                                    if (isStrictModeLocked) AuthorityIndigo.copy(alpha = 0.14f)
+                                    else ParasympatheticSage.copy(alpha = 0.14f)
                                 )
                                 .border(
                                     1.dp,
-                                    if (isStrictModeLocked) RegainCrimson.copy(alpha = 0.4f)
-                                    else RegainMint.copy(alpha = 0.4f),
+                                    if (isStrictModeLocked) AuthorityIndigo.copy(alpha = 0.35f)
+                                    else ParasympatheticSage.copy(alpha = 0.35f),
                                     RoundedCornerShape(12.dp)
                                 )
-                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
                             ) {
-                                Icon(
-                                    imageVector = if (isStrictModeLocked) Icons.Default.Lock else Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = if (isStrictModeLocked) RegainCrimson else RegainMint,
-                                    modifier = Modifier.size(12.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .scale(pulseScale)
+                                        .clip(CircleShape)
+                                        .background(if (isStrictModeLocked) AuthorityIndigo else ParasympatheticSage)
                                 )
                                 Text(
-                                    text = if (isStrictModeLocked) "LOCKED" else "UNLOCKED",
+                                    text = if (isStrictModeLocked) "ARMED" else "UNLOCKED",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isStrictModeLocked) RegainCrimson else RegainMintLight
+                                    color = if (isStrictModeLocked) AuthorityIndigo else ParasympatheticSageLight,
+                                    letterSpacing = 0.5.sp
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // Description text
                     Text(
                         text = if (isStrictModeLocked) {
                             if (strictAppsCount > 0)
-                                "$strictAppsCount app(s) are actively locked under strict plan. Anti-uninstall and Device Admin protections are strictly engaged."
+                                "$strictAppsCount app(s) actively locked under strict policy. Settings tampering and uninstallation are intercepted."
                             else
-                                "Strict Mode Plan is active. Uninstallation and settings tampering are blocked until turned off."
+                                "Strict Mode is armed. Device Administrator defends active rules against bypasses."
                         } else {
-                            "No apps are currently under a strict plan. Device Admin and anti-uninstall protections are released; StrictLock can be uninstalled freely."
+                            "No apps currently under strict multi-day rules. StrictLock can be modified or safely uninstalled."
                         },
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
-                        color = RegainTextSecondary
+                        color = MutedSlateText
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Toggle & Actions
+                    // Switch Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Strict Mode Protection",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RegainTextPrimary
+                            text = "Strict Mode Defense",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AlabasterText
                         )
 
                         Switch(
@@ -287,25 +381,28 @@ fun HomeScreen(viewModel: MainViewModel) {
                                 }
                             },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = RegainMint,
-                                checkedTrackColor = RegainSurfaceVariant,
-                                uncheckedThumbColor = RegainTextMuted,
-                                uncheckedTrackColor = RegainSurfaceVariant
+                                checkedThumbColor = AuthorityIndigo,
+                                checkedTrackColor = AuthorityIndigo.copy(alpha = 0.25f),
+                                uncheckedThumbColor = DimSlateText,
+                                uncheckedTrackColor = InteractiveSurface
                             )
                         )
                     }
 
-                    // If safe to uninstall, provide direct button
+                    // Deliberate high-friction action when safe
                     if (!isStrictModeLocked) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = { viewModel.triggerAppUninstall(context) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = RegainSurfaceVariant,
-                                contentColor = RegainCrimson
-                            )
+                                containerColor = InteractiveSurface,
+                                contentColor = ControlledCrimson
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -324,173 +421,297 @@ fun HomeScreen(viewModel: MainViewModel) {
             }
         }
 
-        // Hero Screen Time Card
+        // =========================================================================
+        // 2. HERO DUAL-METRIC CARD (Von Restorff Isolation: Elevates Time Regained)
+        // =========================================================================
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, RegainCardBorder)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = s1Alpha
+                        translationY = s1Y
+                    },
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
             ) {
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(RegainSurface)
-                        .padding(24.dp)
+                        .padding(20.dp)
                 ) {
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.HourglassTop,
-                                contentDescription = null,
-                                tint = RegainMint,
-                                modifier = Modifier.size(18.dp)
+                    // Dual Metric Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        // Left: Screen Time Used Today
+                        Column(modifier = Modifier.weight(1.1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.HourglassTop,
+                                    contentDescription = null,
+                                    tint = MutedSlateText,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "SCREEN TIME",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MutedSlateText,
+                                    letterSpacing = 0.8.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OdometerText(
+                                text = "${totalHours}h ${totalMins}m",
+                                style = TabularNumberStyle.copy(
+                                    fontSize = 32.sp,
+                                    lineHeight = 38.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = (-0.5).sp
+                                ),
+                                color = AlabasterText
                             )
                             Text(
-                                text = "SCREEN TIME TODAY",
+                                text = "Today's total usage",
                                 fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = RegainMintLight,
-                                letterSpacing = 1.sp
+                                color = DimSlateText
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        // Right: Time Regained (Parasympathetic Sage Highlight)
+                        Column(
+                            modifier = Modifier.weight(0.9f),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                    contentDescription = null,
+                                    tint = ParasympatheticSage,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = "TIME REGAINED",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = ParasympatheticSageLight,
+                                    letterSpacing = 0.8.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OdometerText(
+                                text = "+${savedHours}h ${savedMins}m",
+                                style = TabularNumberStyle.copy(
+                                    fontSize = 28.sp,
+                                    lineHeight = 36.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = ParasympatheticSage
+                            )
+                            Text(
+                                text = "vs 3.5h unguided baseline",
+                                fontSize = 11.sp,
+                                color = DimSlateText
+                            )
+                        }
+                    }
 
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Mindful Balance Ratio Progress Bar
+                    val baselineMs = (3.5 * 3600 * 1000).toFloat()
+                    val ratio = (totalTimeMs.toFloat() / baselineMs).coerceIn(0f, 1f)
+
+                    Column {
                         Row(
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${totalHours}h ${totalMins}m",
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Black,
-                                color = RegainTextPrimary,
-                                letterSpacing = (-1).sp
+                                text = "Circadian Budget Pace",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MutedSlateText
+                            )
+                            Text(
+                                text = "${(ratio * 100).toInt()}% of healthy cap",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (ratio > 0.85f) MindfulAmber else ParasympatheticSageLight,
+                                style = TabularNumberStyle
                             )
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        Text(
-                            text = "Compared to an unconstrained 4h baseline.",
-                            fontSize = 13.sp,
-                            color = RegainTextSecondary
+                        LinearProgressIndicator(
+                            progress = { ratio },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = if (ratio > 0.85f) MindfulAmber else ParasympatheticSage,
+                            trackColor = InteractiveSurface,
+                            strokeCap = StrokeCap.Round
                         )
                     }
                 }
             }
         }
 
-        // 2-Column Metrics (Time Saved & Pickups)
+        // =========================================================================
+        // 3. SECONDARY STAT PILLS (Pickups & Health Factor)
+        // =========================================================================
         item {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = s2Alpha
+                        translationY = s2Y
+                    },
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Time Saved Card
+                // Device Pickups Card
                 Card(
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, RegainCardBorder)
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
                 ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                                contentDescription = null,
-                                tint = RegainMint,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Time Saved",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = RegainTextSecondary
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "+${savedHours}h ${savedMins}m",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RegainMintLight
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Earned back today",
-                            fontSize = 11.sp,
-                            color = RegainTextMuted
-                        )
-                    }
-                }
-
-                // Pickups Card
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, RegainCardBorder)
-                ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(InteractiveSurface),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Visibility,
                                 contentDescription = null,
-                                tint = RegainAmber,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Pickups",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = RegainTextSecondary
+                                tint = MindfulAmber,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "$pickups",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RegainTextPrimary
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Device unlocks today",
-                            fontSize = 11.sp,
-                            color = RegainTextMuted
-                        )
+
+                        Column {
+                            OdometerText(
+                                text = "$pickups",
+                                style = TabularNumberStyle.copy(
+                                    fontSize = 20.sp,
+                                    lineHeight = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = AlabasterText
+                            )
+                            Text(
+                                text = "Device Pickups",
+                                fontSize = 11.sp,
+                                color = MutedSlateText
+                            )
+                        }
+                    }
+                }
+
+                // Autonomic Balance Card
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(InteractiveSurface),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Shield,
+                                contentDescription = null,
+                                tint = AuthorityIndigo,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Column {
+                            Text(
+                                text = if (strictAppsCount > 0) "$strictAppsCount Active" else "Guarded",
+                                fontSize = 16.sp,
+                                lineHeight = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = AlabasterText
+                            )
+                            Text(
+                                text = "Shield Defense",
+                                fontSize = 11.sp,
+                                color = MutedSlateText
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // Daily Activity Bar Graph Card
+        // =========================================================================
+        // 4. HOURLY USAGE INTENSITY (Visual Scanning Zone: Middle 50%)
+        // =========================================================================
         item {
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = s3Alpha
+                        translationY = s3Y
+                    },
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, RegainCardBorder)
+                colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "HOURLY INTENSITY",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = RegainTextMuted,
-                        letterSpacing = 1.sp
-                    )
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "HOURLY USAGE INTENSITY",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MutedSlateText,
+                            letterSpacing = 0.8.sp
+                        )
+                        Text(
+                            text = "Circadian distribution",
+                            fontSize = 11.sp,
+                            color = DimSlateText
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -499,15 +720,16 @@ fun HomeScreen(viewModel: MainViewModel) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp),
+                            .height(90.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom
                     ) {
                         hourlyUsage.forEach { item ->
-                            val heightFraction = (item.minutesUsed.toFloat() / maxMins).coerceIn(0.1f, 1f)
+                            val heightFraction = (item.minutesUsed.toFloat() / maxMins).coerceIn(0.08f, 1f)
                             val animatedHeight by animateFloatAsState(
-                                targetValue = heightFraction,
-                                animationSpec = tween(durationMillis = 600)
+                                targetValue = if (isLoaded) heightFraction else 0f,
+                                animationSpec = MotionPhysics.iosFluidSpring,
+                                label = "bar_height"
                             )
 
                             Column(
@@ -516,19 +738,22 @@ fun HomeScreen(viewModel: MainViewModel) {
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .width(18.dp)
-                                        .height((70 * animatedHeight).dp)
-                                        .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                                        .width(16.dp)
+                                        .height((64 * animatedHeight).dp)
+                                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                         .background(
-                                            if (animatedHeight > 0.5f) RegainMint else RegainSurfaceVariant
+                                            if (animatedHeight > 0.65f) AuthorityIndigo
+                                            else if (animatedHeight > 0.35f) ParasympatheticSage
+                                            else SubtleHairline
                                         )
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = item.hourLabel,
-                                    fontSize = 10.sp,
-                                    color = RegainTextMuted,
-                                    fontWeight = FontWeight.Medium
+                                    fontSize = 11.sp,
+                                    color = MutedSlateText,
+                                    fontWeight = FontWeight.Medium,
+                                    style = TabularNumberStyle
                                 )
                             }
                         }
@@ -537,7 +762,9 @@ fun HomeScreen(viewModel: MainViewModel) {
             }
         }
 
-        // Top Distracting Apps Section Header
+        // =========================================================================
+        // 5. TOP USED APPS BREAKDOWN (Miller's Law <= 3 data points per row)
+        // =========================================================================
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -545,34 +772,35 @@ fun HomeScreen(viewModel: MainViewModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Top Used Apps",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = RegainTextPrimary
+                    text = "Top Used Applications",
+                    fontSize = 18.sp,
+                    lineHeight = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AlabasterText
                 )
                 Text(
-                    text = "${topApps.size} tracked",
+                    text = "${topApps.size} monitored",
                     fontSize = 12.sp,
-                    color = RegainTextMuted
+                    color = MutedSlateText
                 )
             }
         }
 
-        // Top Apps List
         if (topApps.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(RegainSurface)
+                        .background(ElevatedSlate)
+                        .border(1.dp, SubtleHairline, RoundedCornerShape(16.dp))
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Grant Usage Access in Permissions tab to load detailed app breakdowns.",
+                        text = "Grant Usage Access in Shields tab to load screen time breakdowns.",
                         fontSize = 13.sp,
-                        color = RegainTextMuted,
+                        color = MutedSlateText,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -585,26 +813,32 @@ fun HomeScreen(viewModel: MainViewModel) {
                 val timeString = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer {
+                            alpha = s4Alpha
+                            translationY = s4Y
+                        }
+                        .iosTactilePress(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = RegainSurface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, RegainCardBorder)
+                    colors = CardDefaults.cardColors(containerColor = ElevatedSlate),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SubtleHairline)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AppIconImage(
                             packageName = app.packageName,
                             appName = app.appName,
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
                         )
 
-                        Spacer(modifier = Modifier.width(14.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Row(
@@ -615,18 +849,20 @@ fun HomeScreen(viewModel: MainViewModel) {
                                 Text(
                                     text = app.appName,
                                     fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = RegainTextPrimary
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = AlabasterText,
+                                    maxLines = 1
                                 )
                                 Text(
                                     text = timeString,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = RegainMintLight
+                                    color = ParasympatheticSageLight,
+                                    style = TabularNumberStyle
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
 
                             LinearProgressIndicator(
                                 progress = { app.percentageOfTotal },
@@ -634,8 +870,9 @@ fun HomeScreen(viewModel: MainViewModel) {
                                     .fillMaxWidth()
                                     .height(5.dp)
                                     .clip(RoundedCornerShape(3.dp)),
-                                color = RegainMint,
-                                trackColor = RegainSurfaceVariant
+                                color = ParasympatheticSage,
+                                trackColor = InteractiveSurface,
+                                strokeCap = StrokeCap.Round
                             )
                         }
                     }

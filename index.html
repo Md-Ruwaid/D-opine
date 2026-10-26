@@ -167,6 +167,7 @@
             </div>
 
             <!-- Device Frame Mockup Container -->
+            <!-- Device Frame Mockup Container -->
             <div class="device-wrapper">
                 <div class="phone-frame">
                     <div class="phone-speaker"></div>
@@ -178,62 +179,74 @@
                         <!-- Screen 1: Dashboard -->
                         <div class="screen-view active" id="view-dashboard">
                             <div class="app-status-bar">
-                                <span>9:41</span>
+                                <span style="font-variant-numeric: tabular-nums;">09:41</span>
                                 <div class="status-icons">
                                     <span>5G</span>
                                     <span>100%</span>
                                 </div>
                             </div>
+
+                            <!-- Top Integrity Banner (Top 25% High-Effort / Status Zone) -->
+                            <div class="top-integrity-banner">
+                                <span class="top-integrity-dot"></span>
+                                <span>Strict Mode Active • Anti-Uninstall Armed</span>
+                            </div>
+
                             <div class="screen-header">
                                 <div>
-                                    <h3 class="app-title">Regain</h3>
-                                    <p class="app-subtitle">Mindful Screen Time</p>
+                                    <h3 class="app-title">StrictLock</h3>
+                                    <p class="app-subtitle">Regain Edition • Neuro-Ergonomic</p>
                                 </div>
-                                <span class="shield-badge">Shields Active</span>
+                                <span class="shield-badge" style="background: rgba(78, 168, 139, 0.15); color: var(--accent-sage); border-color: rgba(78, 168, 139, 0.3);">Shields Armed</span>
                             </div>
 
-                            <!-- Screen Time Hero -->
-                            <div class="mock-card mock-hero">
-                                <div class="mock-card-label">SCREEN TIME TODAY</div>
-                                <div class="mock-hero-val">2h 45m</div>
-                                <div class="mock-hero-sub">Baseline: 4h 00m average</div>
+                            <!-- Dual-Metric Hero Card (Elevating Time Regained alongside screen time) -->
+                            <div class="mock-card mock-hero" style="background: linear-gradient(180deg, rgba(78, 168, 139, 0.08) 0%, var(--surface-1) 100%); border-color: rgba(78, 168, 139, 0.3);">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <div class="mock-card-label" style="color: var(--accent-sage);">DAILY MINDFUL BALANCE</div>
+                                    <span style="font-size: 0.65rem; color: var(--text-secondary); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">Allowance: 3h 30m</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 4px;">
+                                    <div>
+                                        <div class="mock-hero-val" style="font-variant-numeric: tabular-nums;">2h 15m</div>
+                                        <div class="mock-hero-sub">Today's Screen Time Used</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-sage); font-variant-numeric: tabular-nums;">+1h 45m</div>
+                                        <div class="mock-hero-sub" style="color: var(--accent-sage);">Time Regained</div>
+                                    </div>
+                                </div>
+                                <div class="mock-progress-track" style="margin-top: 12px; height: 6px;">
+                                    <div class="mock-progress-fill" style="width: 64%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-sage));"></div>
+                                </div>
                             </div>
 
-                            <!-- 2 Metrics -->
-                            <div class="mock-row">
-                                <div class="mock-card mock-half">
-                                    <span class="metric-label">Time Saved</span>
-                                    <span class="metric-val text-mint">+1h 35m</span>
-                                </div>
-                                <div class="mock-card mock-half">
-                                    <span class="metric-label">Pickups</span>
-                                    <span class="metric-val">48</span>
-                                </div>
-                            </div>
-
-                            <!-- Hourly Bars -->
+                            <!-- Hourly Usage Bar Chart with Tabular Numerals -->
                             <div class="mock-card mock-chart-card">
-                                <div class="mock-card-label">HOURLY INTENSITY</div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <div class="mock-card-label">HOURLY USAGE PROFILE</div>
+                                    <span style="font-size: 0.62rem; color: var(--text-muted); font-variant-numeric: tabular-nums;">Peak: 14:00 (42m)</span>
+                                </div>
                                 <div class="mock-bars">
-                                    <div class="bar-col"><div class="bar" style="height: 20%;"></div><span>12A</span></div>
-                                    <div class="bar-col"><div class="bar" style="height: 10%;"></div><span>4A</span></div>
-                                    <div class="bar-col"><div class="bar active" style="height: 65%;"></div><span>8A</span></div>
-                                    <div class="bar-col"><div class="bar active" style="height: 90%;"></div><span>12P</span></div>
-                                    <div class="bar-col"><div class="bar active" style="height: 70%;"></div><span>4P</span></div>
-                                    <div class="bar-col"><div class="bar" style="height: 35%;"></div><span>8P</span></div>
+                                    <div class="bar-col"><div class="bar" style="height: 15%;"></div><span>00</span></div>
+                                    <div class="bar-col"><div class="bar" style="height: 8%;"></div><span>04</span></div>
+                                    <div class="bar-col"><div class="bar active" style="height: 55%; background: var(--border-subtle);"></div><span>08</span></div>
+                                    <div class="bar-col"><div class="bar active" style="height: 88%; background: var(--accent-sage);"></div><span>12</span></div>
+                                    <div class="bar-col"><div class="bar active" style="height: 72%; background: var(--accent-indigo);"></div><span>16</span></div>
+                                    <div class="bar-col"><div class="bar" style="height: 30%;"></div><span>20</span></div>
                                 </div>
                             </div>
 
-                            <!-- Top Apps List -->
+                            <!-- Top Apps Breakdown (Miller's Law - 3 Data Points per row) -->
                             <div class="mock-apps-list">
                                 <div class="mock-app-item">
                                     <div class="mock-app-icon icon-ig">IG</div>
                                     <div class="mock-app-details">
                                         <div class="mock-app-name-row">
                                             <span>Instagram</span>
-                                            <span class="text-mint">42m</span>
+                                            <span style="color: var(--accent-sage); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">42m / 45m</span>
                                         </div>
-                                        <div class="mock-progress-track"><div class="mock-progress-fill" style="width: 65%;"></div></div>
+                                        <div class="mock-progress-track" style="height: 6px;"><div class="mock-progress-fill" style="width: 93%; background: var(--accent-amber);"></div></div>
                                     </div>
                                 </div>
                                 <div class="mock-app-item">
@@ -241,186 +254,210 @@
                                     <div class="mock-app-details">
                                         <div class="mock-app-name-row">
                                             <span>YouTube</span>
-                                            <span class="text-mint">35m</span>
+                                            <span style="color: var(--accent-sage); font-family: var(--font-mono); font-variant-numeric: tabular-nums;">32m / 60m</span>
                                         </div>
-                                        <div class="mock-progress-track"><div class="mock-progress-fill" style="width: 48%;"></div></div>
+                                        <div class="mock-progress-track" style="height: 6px;"><div class="mock-progress-fill" style="width: 53%; background: var(--accent-sage);"></div></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Screen 2: Breathing Overlay -->
+                        <!-- Screen 2: Mindful Breathing Overlay (Optical Center ~42% from top) -->
                         <div class="screen-view" id="view-overlay">
                             <div class="overlay-mock-content">
                                 <div class="overlay-app-header">
                                     <div class="mock-app-icon icon-ig big-icon">IG</div>
-                                    <div class="overlay-app-title">Instagram</div>
+                                    <div class="overlay-app-title">Instagram Locked</div>
                                 </div>
 
+                                <!-- Concentric Translucent Rings at Optical Center -->
                                 <div class="breathing-circle-wrapper">
                                     <div class="circle-outer"></div>
                                     <div class="circle-mid"></div>
                                     <div class="circle-core">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                                         </svg>
                                     </div>
                                 </div>
 
+                                <!-- Cognitive Reframing Copy -->
                                 <div class="overlay-message-block">
-                                    <h4 class="overlay-heading text-crimson">Daily Limit Reached</h4>
-                                    <p class="overlay-body">Strict Mode Protection is active.<br>No extensions or bypasses allowed today.</p>
+                                    <h4 class="overlay-heading">Inhale slowly...</h4>
+                                    <p class="overlay-body">Release the urge to open automatically.<br>Your mindful daily limit of 45m is locked.</p>
+                                    <div class="overlay-countdown-badge">
+                                        Strict Mode Active • Resets in 06:18:42
+                                    </div>
                                 </div>
 
-                                <button class="overlay-btn-home">EXIT TO HOME SCREEN</button>
+                                <!-- 56dp Ergonomic Thumb Action Button -->
+                                <button class="overlay-btn-home" style="min-height: 56px;">RETURN TO HOME SCREEN</button>
                             </div>
                         </div>
 
-                        <!-- Screen 3: Blocks -->
+                        <!-- Screen 3: Blocks (Armored Vault Cards) -->
                         <div class="screen-view" id="view-blocks">
                             <div class="screen-header">
                                 <div>
-                                    <h3 class="app-title">Distraction Shields</h3>
-                                    <p class="app-subtitle">Regain Anti-Tamper & Nudges</p>
+                                    <h3 class="app-title">Mindful Shields</h3>
+                                    <p class="app-subtitle">Tactile Behavioral Vault</p>
                                 </div>
                             </div>
 
-                            <div class="mock-setting-card">
-                                <div class="setting-icon icon-red">📹</div>
+                            <!-- Category 1: Short-Form Doomscroll Shields -->
+                            <div class="mock-card-label" style="color: var(--accent-indigo); margin-top: 4px;">SHORT-FORM DOOMSCROLL SHIELDS</div>
+
+                            <div class="vault-card armed">
+                                <div class="setting-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">📹</div>
                                 <div class="setting-info">
-                                    <div class="setting-title">Block Shorts & Reels</div>
-                                    <div class="setting-desc">Auto-closes doomscrolling reels while keeping search & messages.</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span class="setting-title">Block Shorts & Reels</span>
+                                        <span class="vault-badge armed">ARMED</span>
+                                    </div>
+                                    <div class="setting-desc">Closes infinite scrolling feeds while preserving DMs & search.</div>
                                 </div>
-                                <div class="mock-switch on"></div>
                             </div>
 
-                            <div class="mock-setting-card">
-                                <div class="setting-icon icon-mint">🍃</div>
+                            <!-- Category 2: Mindful Friction & Window Guards -->
+                            <div class="mock-card-label" style="color: var(--accent-sage); margin-top: 8px;">MINDFUL FRICTION & WINDOW GUARDS</div>
+
+                            <div class="vault-card armed">
+                                <div class="setting-icon" style="background: rgba(78, 168, 139, 0.15); color: var(--accent-sage);">🍃</div>
                                 <div class="setting-info">
-                                    <div class="setting-title">Mindful Pause</div>
-                                    <div class="setting-desc">5-second breathing circle reflection before opening apps.</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span class="setting-title">5s Mindful Pause</span>
+                                        <span class="vault-badge armed" style="background: rgba(78, 168, 139, 0.15); color: var(--accent-sage); border-color: rgba(78, 168, 139, 0.3);">ARMED</span>
+                                    </div>
+                                    <div class="setting-desc">Vagus nerve reset breathing circle before app launches.</div>
                                 </div>
-                                <div class="mock-switch on"></div>
                             </div>
 
-                            <div class="mock-setting-card">
-                                <div class="setting-icon icon-mint">🔒</div>
+                            <div class="vault-card">
+                                <div class="setting-icon" style="background: rgba(225, 29, 72, 0.12); color: var(--accent-crimson);">🔒</div>
                                 <div class="setting-info">
-                                    <div class="setting-title">Uninstall Protection</div>
-                                    <div class="setting-desc">Device Admin + Accessibility closes Settings, Force Stop, & App Info.</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span class="setting-title">Uninstall Protection</span>
+                                        <span class="vault-badge locked-pill">LOCKED BY STRICT RULE</span>
+                                    </div>
+                                    <div class="setting-desc">Settings, Force Stop, & deactivation screens blocked.</div>
                                 </div>
-                                <div class="mock-switch on"></div>
                             </div>
 
-                            <div class="mock-setting-card">
-                                <div class="setting-icon icon-amber">🪟</div>
+                            <div class="vault-card armed">
+                                <div class="setting-icon" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo);">🪟</div>
                                 <div class="setting-info">
-                                    <div class="setting-title">Split-Screen Shield</div>
-                                    <div class="setting-desc">Blocks bypassing limits via multitasking split-windows.</div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span class="setting-title">Split-Screen Guard</span>
+                                        <span class="vault-badge armed">ARMED</span>
+                                    </div>
+                                    <div class="setting-desc">Blocks multitasking bypass attempts.</div>
                                 </div>
-                                <div class="mock-switch on"></div>
                             </div>
                         </div>
 
-                        <!-- Screen 4: Focus Timer -->
+                        <!-- Screen 4: Focus Timer (Flow State Induction) -->
                         <div class="screen-view" id="view-focus">
                             <div class="screen-header">
                                 <div>
-                                    <h3 class="app-title">Focus Session</h3>
-                                    <p class="app-subtitle">Deep Work Pomodoro</p>
+                                    <h3 class="app-title">Deep Focus</h3>
+                                    <p class="app-subtitle">Flow State Induction</p>
                                 </div>
                             </div>
 
+                            <!-- Tactile Circular Dial (InteractiveSurface + ParasympatheticSage) -->
                             <div class="mock-timer-circle">
-                                <div class="timer-dial-outer">
-                                    <div class="timer-time">23:45</div>
-                                    <div class="timer-state text-mint">FOCUSING</div>
+                                <div class="timer-dial-outer" style="border-color: var(--surface-2); border-top-color: var(--accent-sage); border-right-color: var(--accent-sage);">
+                                    <div class="timer-time" style="font-variant-numeric: tabular-nums;">23:45</div>
+                                    <div class="timer-state" style="color: var(--accent-sage);">DEEP FOCUS • STRICT ANTI-QUIT</div>
                                 </div>
                             </div>
 
+                            <!-- Scientific Cycle Presets -->
                             <div class="timer-chips-row">
-                                <span class="chip">15m</span>
-                                <span class="chip active">25m</span>
-                                <span class="chip">45m</span>
-                                <span class="chip">60m</span>
+                                <span class="chip">25m Pomodoro</span>
+                                <span class="chip active" style="background: rgba(78, 168, 139, 0.15); border-color: var(--accent-sage); color: var(--accent-sage);">45m Deep Work</span>
+                                <span class="chip">90m Ultradian</span>
                             </div>
 
-                            <button class="mock-btn-start">PAUSE</button>
+                            <!-- 56dp Primary Thumb Action CTA -->
+                            <button class="mock-btn-start" style="width: 100%; min-height: 56px; border-radius: var(--radius-pill); background: var(--accent-sage); color: #0B0F17; font-weight: 800; font-size: 0.95rem;">BEGIN FOCUS SESSION</button>
 
-                            <div class="mock-setting-card small-pad">
+                            <div class="vault-card" style="margin-top: 10px; padding: 10px 14px;">
                                 <div class="setting-info">
-                                    <div class="setting-title">Strict Focus Mode</div>
-                                    <div class="setting-desc">You cannot quit until the timer ends.</div>
+                                    <div class="setting-title" style="font-size: 0.78rem;">Strict Anti-Quit Engine</div>
+                                    <div class="setting-desc">Phone locked to focus tools until session timer concludes.</div>
                                 </div>
-                                <div class="mock-switch on"></div>
+                                <div class="mock-switch on" style="background: var(--accent-sage);"></div>
                             </div>
                         </div>
 
-                        <!-- Screen 5: StrictLock Dedicated Page -->
+                        <!-- Screen 5: StrictLock 3-Step Commitment Engine -->
                         <div class="screen-view" id="view-strictlock">
                             <div class="screen-header">
                                 <div>
-                                    <h3 class="app-title">StrictLock</h3>
-                                    <p class="app-subtitle">Custom Multi-Day Rules</p>
+                                    <h3 class="app-title">Commitment Engine</h3>
+                                    <p class="app-subtitle">Solemn Multi-Day Contracts</p>
                                 </div>
-                                <span class="badge-new-rule">+ New Rule</span>
+                                <span class="badge-new-rule" style="background: rgba(99, 102, 241, 0.15); color: var(--accent-indigo); border-color: rgba(99, 102, 241, 0.3);">+ 3-Step Rule</span>
                             </div>
 
-                            <!-- Tamper Card -->
-                            <div class="tamper-card-mini">
-                                <span class="tamper-icon">🛡️</span>
-                                <div>
-                                    <div class="tamper-title">Clock Anti-Tamper Shield</div>
-                                    <div class="tamper-desc">Hardware elapsed time verified vs wall clock.</div>
-                                </div>
-                            </div>
-
-                            <!-- Strict Rule Card -->
-                            <div class="rule-card-mini">
+                            <!-- Active Strict Rule Contract -->
+                            <div class="step-card-mini strict-contract">
                                 <div class="rule-top-row">
                                     <div class="mock-app-icon icon-rd">RD</div>
                                     <div class="rule-info">
                                         <div class="rule-title-row">
                                             <span>Reddit</span>
-                                            <span class="badge-strict">STRICT</span>
+                                            <span class="badge-strict" style="background: rgba(225, 29, 72, 0.15); color: var(--accent-crimson);">STRICT UNBREAKABLE</span>
                                         </div>
-                                        <div class="rule-sub">12 calendar days left</div>
+                                        <div class="rule-sub" style="font-family: var(--font-mono); font-variant-numeric: tabular-nums;">12 calendar days remaining</div>
                                     </div>
                                 </div>
                                 <div class="rule-progress-row">
-                                    <span>28m / 30m</span>
-                                    <span class="text-crimson">Limit Near</span>
+                                    <span style="font-family: var(--font-mono); font-variant-numeric: tabular-nums;">28m / 30m</span>
+                                    <span style="color: var(--accent-crimson); font-weight: 700;">LIMIT NEAR</span>
                                 </div>
-                                <div class="mock-progress-track"><div class="mock-progress-fill bg-crimson" style="width: 93%;"></div></div>
-                                <div class="rule-footer">Locked by Strict Mode. No edits or deletions.</div>
+                                <div class="mock-progress-track"><div class="mock-progress-fill" style="width: 93%; background: var(--accent-crimson);"></div></div>
+                                <div class="rule-footer" style="color: var(--text-secondary);">Solemn contract active. Settings, uninstall & clock tampering blocked.</div>
                             </div>
 
-                            <!-- Casual Rule Card -->
-                            <div class="rule-card-mini">
+                            <!-- Active Casual Rule Contract with Emergency Override Dots -->
+                            <div class="step-card-mini casual-contract">
                                 <div class="rule-top-row">
                                     <div class="mock-app-icon icon-tk">TT</div>
                                     <div class="rule-info">
                                         <div class="rule-title-row">
                                             <span>TikTok</span>
-                                            <span class="badge-casual">CASUAL</span>
+                                            <span class="badge-casual" style="background: rgba(245, 158, 11, 0.15); color: var(--accent-amber);">CASUAL MODE</span>
                                         </div>
-                                        <div class="rule-sub">25 calendar days left</div>
+                                        <div class="rule-sub" style="font-family: var(--font-mono); font-variant-numeric: tabular-nums;">25 calendar days remaining</div>
                                     </div>
                                 </div>
                                 <div class="rule-progress-row">
-                                    <span>15m / 45m</span>
-                                    <span class="text-mint">30m left</span>
+                                    <span style="font-family: var(--font-mono); font-variant-numeric: tabular-nums;">15m / 45m</span>
+                                    <span style="color: var(--accent-amber); font-weight: 700;">30m LEFT</span>
                                 </div>
-                                <div class="mock-progress-track"><div class="mock-progress-fill" style="width: 33%;"></div></div>
-                                <div class="rule-footer-btn">Requires 10m wait + verification code to unlock.</div>
+                                <div class="mock-progress-track"><div class="mock-progress-fill" style="width: 33%; background: var(--accent-amber);"></div></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                    <span style="font-size: 0.62rem; color: var(--accent-amber);">10-min cooldown + 12-char challenge</span>
+                                    <div class="override-seq">
+                                        <div class="override-dot active"></div>
+                                        <div class="override-dot active"></div>
+                                        <div class="override-dot"></div>
+                                        <div class="override-dot"></div>
+                                        <div class="override-dot"></div>
+                                        <div class="override-dot"></div>
+                                        <div class="override-dot"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                     </div>
 
-                    <!-- Bottom Nav Simulator -->
+                    <!-- Bottom Nav Simulator (56dp Ergonomic Touch Targets) -->
                     <div class="phone-bottom-nav">
-                        <div class="nav-item active"><span>🏠</span><small>Home</small></div>
+                        <div class="nav-item active" style="color: var(--accent-indigo);"><span>🏠</span><small>Home</small></div>
                         <div class="nav-item"><span>🛡️</span><small>Blocks</small></div>
                         <div class="nav-item"><span>⏱️</span><small>Focus</small></div>
                         <div class="nav-item"><span>🔒</span><small>StrictLock</small></div>

@@ -9,36 +9,42 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val RegainDarkColorScheme = darkColorScheme(
-    primary = RegainMint,
-    onPrimary = RegainDarkBg,
-    primaryContainer = RegainSurfaceVariant,
-    onPrimaryContainer = RegainMintLight,
-    secondary = RegainAmber,
-    onSecondary = RegainDarkBg,
-    background = RegainDarkBg,
-    onBackground = RegainTextPrimary,
-    surface = RegainSurface,
-    onSurface = RegainTextPrimary,
-    surfaceVariant = RegainSurfaceVariant,
-    onSurfaceVariant = RegainTextSecondary,
-    error = RegainCrimson,
-    onError = RegainTextPrimary
+// Low-Cortisol, Anti-Halation Dark Color Scheme
+private val NeuroErgonomicColorScheme = darkColorScheme(
+    primary = ParasympatheticSage,
+    onPrimary = DeepObsidian,
+    primaryContainer = InteractiveSurface,
+    onPrimaryContainer = ParasympatheticSageLight,
+    secondary = AuthorityIndigo,
+    onSecondary = AlabasterText,
+    secondaryContainer = InteractiveSurface,
+    onSecondaryContainer = AuthorityIndigo,
+    tertiary = MindfulAmber,
+    onTertiary = DeepObsidian,
+    background = DeepObsidian,
+    onBackground = AlabasterText,
+    surface = ElevatedSlate,
+    onSurface = AlabasterText,
+    surfaceVariant = InteractiveSurface,
+    onSurfaceVariant = MutedSlateText,
+    outline = SubtleHairline,
+    error = ControlledCrimson,
+    onError = AlabasterText
 )
 
 @Composable
 fun StrictLockTheme(
     content: @Composable () -> Unit
 ) {
-    val colorScheme = RegainDarkColorScheme
+    val colorScheme = NeuroErgonomicColorScheme
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window ?: return@SideEffect
             @Suppress("DEPRECATION")
-            window.statusBarColor = RegainDarkBg.toArgb()
+            window.statusBarColor = DeepObsidian.toArgb()
             @Suppress("DEPRECATION")
-            window.navigationBarColor = RegainDarkBg.toArgb()
+            window.navigationBarColor = DeepObsidian.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
         }
@@ -46,6 +52,7 @@ fun StrictLockTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = StrictLockTypography,
         content = content
     )
 }

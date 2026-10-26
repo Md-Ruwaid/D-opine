@@ -47,23 +47,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.graphics.graphicsLayer
 import com.strictlock.app.service.AppBlockerService
 import com.strictlock.app.ui.screens.BlocksScreen
 import com.strictlock.app.ui.screens.FocusScreen
 import com.strictlock.app.ui.screens.HomeScreen
 import com.strictlock.app.ui.screens.PermissionsScreen
 import com.strictlock.app.ui.screens.StrictLockScreen
-import com.strictlock.app.ui.theme.RegainAmber
-import com.strictlock.app.ui.theme.RegainCardBorder
-import com.strictlock.app.ui.theme.RegainCrimson
-import com.strictlock.app.ui.theme.RegainDarkBg
-import com.strictlock.app.ui.theme.RegainMint
-import com.strictlock.app.ui.theme.RegainMintLight
-import com.strictlock.app.ui.theme.RegainSurface
-import com.strictlock.app.ui.theme.RegainSurfaceVariant
-import com.strictlock.app.ui.theme.RegainTextMuted
-import com.strictlock.app.ui.theme.RegainTextPrimary
-import com.strictlock.app.ui.theme.StrictLockTheme
+import com.strictlock.app.ui.theme.*
 import com.strictlock.app.ui.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
@@ -119,12 +111,42 @@ fun MainContent(viewModel: MainViewModel) {
                     .padding(paddingValues)
                     .background(RegainDarkBg)
             ) {
-                when (selectedTab) {
-                    0 -> HomeScreen(viewModel)
-                    1 -> BlocksScreen(viewModel)
-                    2 -> FocusScreen(viewModel)
-                    3 -> StrictLockScreen(viewModel)
-                    4 -> PermissionsScreen(viewModel)
+                androidx.compose.animation.AnimatedContent(
+                    targetState = selectedTab,
+                    transitionSpec = {
+                        val isForward = targetState > initialState
+                        val slideOffset = { size: Int -> if (isForward) size / 14 else -size / 14 }
+                        val exitSlideOffset = { size: Int -> if (isForward) -size / 14 else size / 14 }
+
+                        (androidx.compose.animation.slideInHorizontally(
+                            animationSpec = MotionPhysics.iosFluidIntOffsetSpring,
+                            initialOffsetX = slideOffset
+                        ) + androidx.compose.animation.fadeIn(
+                            animationSpec = androidx.compose.animation.core.tween(220)
+                        ) + androidx.compose.animation.scaleIn(
+                            initialScale = 0.98f,
+                            animationSpec = MotionPhysics.iosFluidSpring
+                        )).togetherWith(
+                            androidx.compose.animation.slideOutHorizontally(
+                                animationSpec = MotionPhysics.iosFluidIntOffsetSpring,
+                                targetOffsetX = exitSlideOffset
+                            ) + androidx.compose.animation.fadeOut(
+                                animationSpec = androidx.compose.animation.core.tween(160)
+                            ) + androidx.compose.animation.scaleOut(
+                                targetScale = 0.98f,
+                                animationSpec = MotionPhysics.iosFluidSpring
+                            )
+                        )
+                    },
+                    label = "MainScreenDepthTransition"
+                ) { targetTab ->
+                    when (targetTab) {
+                        0 -> HomeScreen(viewModel)
+                        1 -> BlocksScreen(viewModel)
+                        2 -> FocusScreen(viewModel)
+                        3 -> StrictLockScreen(viewModel)
+                        4 -> PermissionsScreen(viewModel)
+                    }
                 }
             }
         }
@@ -137,6 +159,7 @@ fun RegainBottomNavigationBar(
     onTabSelected: (Int) -> Unit,
     hasPermissionWarning: Boolean
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val items = listOf(
         BottomNavItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
         BottomNavItem("Blocks", Icons.Filled.Block, Icons.Outlined.Block),
@@ -148,42 +171,66 @@ fun RegainBottomNavigationBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(RegainDarkBg)
+            .background(DeepObsidian)
             .border(
                 width = 1.dp,
-                color = RegainCardBorder,
-                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+                color = SubtleHairline,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             )
-            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-            .background(RegainSurface)
-            .padding(vertical = 8.dp, horizontal = 6.dp)
+            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+            .background(ElevatedSlate)
+            .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
                 val isSelected = selectedTab == index
 
+                val iconScale by androidx.compose.animation.core.animateFloatAsState(
+                    targetValue = if (isSelected) 1.08f else 1f,
+                    animationSpec = MotionPhysics.iosSnappySpring,
+                    label = "tabIconScale"
+                )
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(14.dp))
+                        .iosTactilePress(
+                            scaleDown = 0.92f,
+                            onPressHaptic = {
+                                com.strictlock.app.ui.haptics.NeuroHapticEngine.lightTick(context)
+                            }
+                        )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { onTabSelected(index) }
-                        .padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            if (selectedTab != index) {
+                                com.strictlock.app.ui.haptics.NeuroHapticEngine.lightTick(context)
+                                onTabSelected(index)
+                            }
+                        }
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Box(contentAlignment = Alignment.TopEnd) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
+                                .graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                }
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (isSelected && item.isCustomTab) RegainCrimson.copy(alpha = 0.18f)
-                                    else if (isSelected) RegainMint.copy(alpha = 0.15f)
+                                    if (isSelected && item.isCustomTab) AuthorityIndigo.copy(alpha = 0.22f)
+                                    else if (isSelected) ParasympatheticSage.copy(alpha = 0.18f)
                                     else androidx.compose.ui.graphics.Color.Transparent
                                 ),
                             contentAlignment = Alignment.Center
@@ -191,9 +238,9 @@ fun RegainBottomNavigationBar(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.label,
-                                tint = if (isSelected && item.isCustomTab) RegainCrimson
-                                else if (isSelected) RegainMintLight
-                                else RegainTextMuted,
+                                tint = if (isSelected && item.isCustomTab) AuthorityIndigo
+                                else if (isSelected) ParasympatheticSageLight
+                                else MutedSlateText,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -201,22 +248,23 @@ fun RegainBottomNavigationBar(
                         if (item.hasWarning) {
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp)
+                                    .size(7.dp)
                                     .clip(CircleShape)
-                                    .background(RegainAmber)
+                                    .background(MindfulAmber)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
                         text = item.label,
-                        fontSize = 10.sp,
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected && item.isCustomTab) RegainCrimson
-                        else if (isSelected) RegainMintLight
-                        else RegainTextMuted
+                        color = if (isSelected && item.isCustomTab) AuthorityIndigo
+                        else if (isSelected) ParasympatheticSageLight
+                        else MutedSlateText
                     )
                 }
             }

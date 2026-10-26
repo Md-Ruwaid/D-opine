@@ -2,12 +2,27 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Haptic helper for mobile browsers (Apple / Android Web Vibration API)
+    const triggerHaptic = (pattern = 10) => {
+        try {
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        } catch (_) {}
+    };
+
+    // Attach tactile tick to all interactive controls
+    document.querySelectorAll('button, .btn, .preview-tab, .chip, .nav-item').forEach(el => {
+        el.addEventListener('pointerdown', () => triggerHaptic(10));
+    });
+
     // 1. Phone Mockup Screen Tab Switcher
     const tabs = document.querySelectorAll('.preview-tab');
     const screenViews = document.querySelectorAll('.screen-view');
 
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
+            triggerHaptic(12);
             const screenId = tab.getAttribute('data-screen');
 
             // Set active tab
@@ -38,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startBreathingCycle() {
         isBreathingActive = true;
+        triggerHaptic(15);
         toggleBtn.textContent = 'Pause Mindful Session';
         toggleBtn.classList.add('btn-primary');
         toggleBtn.classList.remove('btn-outline');
@@ -49,23 +65,36 @@ document.addEventListener('DOMContentLoaded', () => {
         isBreathingActive = false;
         clearInterval(breathInterval);
         clearInterval(timerInterval);
+        triggerHaptic(10);
         toggleBtn.textContent = 'Start Mindful Session';
         toggleBtn.classList.remove('btn-primary');
         toggleBtn.classList.add('btn-outline');
 
         phaseText.textContent = 'Inhale';
         countText.textContent = '4';
-        breathingCircle.style.transform = 'scale(1)';
+        breathingCircle.style.transform = 'scale(1) rotate(0deg)';
     }
 
     function runPhase(phase, duration, scale) {
         if (!isBreathingActive) return;
 
-        currentPhase = phase;
-        phaseText.textContent = phase;
+        let rotateDeg = 0;
+        if (phase === 'Inhale') {
+            phaseText.textContent = 'Inhale slowly...';
+            rotateDeg = 30;
+            triggerHaptic([25, 40, 20]);
+        } else if (phase === 'Hold') {
+            phaseText.textContent = 'Hold gently...';
+            rotateDeg = 30;
+            triggerHaptic(15);
+        } else {
+            phaseText.textContent = 'Release the urge...';
+            rotateDeg = 0;
+            triggerHaptic(10);
+        }
         secondsLeft = duration;
         countText.textContent = secondsLeft;
-        breathingCircle.style.transform = `scale(${scale})`;
+        breathingCircle.style.transform = `scale(${scale}) rotate(${rotateDeg}deg)`;
 
         clearInterval(timerInterval);
         timerInterval = setInterval(() => {

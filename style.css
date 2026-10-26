@@ -1,32 +1,52 @@
 /* ==========================================================================
-   StrictLock (Regain Edition) — World-Class Design System
-   Palette: Deep Obsidian (#090C0A), Elevated Slate (#131714), Mint (#22C55E)
+   StrictLock (Regain Edition) — Neuro-Ergonomic Design System
+   Palette: Deep Obsidian (#0B0F17), Elevated Slate (#131A26), Parasympathetic Sage (#4EA88B), Authority Indigo (#6366F1)
    ========================================================================== */
 
 :root {
-    --bg-dark: #090C0A;
-    --bg-surface: #131714;
-    --bg-surface-elevated: #1A211D;
-    --bg-glass: rgba(19, 23, 20, 0.75);
+    --bg-dark: #0B0F17;
+    --bg-primary: #0B0F17;
+    --bg-surface: #131A26;
+    --surface-1: #131A26;
+    --bg-surface-elevated: #1C2536;
+    --surface-2: #1C2536;
+    --bg-glass: rgba(19, 26, 38, 0.78);
     
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --border-green: rgba(34, 197, 94, 0.28);
-    --border-card: #232D27;
+    --border-subtle: #263248;
+    --border-card: #263248;
+    --border-green: rgba(78, 168, 139, 0.32);
+    --border-sage: rgba(78, 168, 139, 0.32);
+    --border-indigo: rgba(99, 102, 241, 0.32);
 
-    --mint-primary: #22C55E;
-    --mint-light: #4ADE80;
-    --mint-glow: rgba(34, 197, 94, 0.12);
-    --mint-dark: #15803D;
+    --accent-sage: #4EA88B;
+    --accent-sage-light: #6BBF9E;
+    --accent-sage-glow: rgba(78, 168, 139, 0.15);
+    
+    --accent-indigo: #6366F1;
+    --accent-indigo-dark: #4F46E5;
+    --accent-indigo-glow: rgba(99, 102, 241, 0.15);
+
+    --accent-amber: #F59E0B;
+    --accent-amber-glow: rgba(245, 158, 11, 0.15);
+
+    --accent-crimson: #E11D48;
+    --accent-crimson-glow: rgba(225, 29, 72, 0.15);
+
+    /* Legacy mapping for 100% theme consistency */
+    --mint-primary: #4EA88B;
+    --mint-light: #6BBF9E;
+    --mint-glow: rgba(78, 168, 139, 0.15);
+    --mint-dark: #3B826C;
 
     --amber-warning: #F59E0B;
-    --amber-glow: rgba(245, 158, 11, 0.12);
+    --amber-glow: rgba(245, 158, 11, 0.15);
 
-    --crimson-strict: #EF4444;
-    --crimson-glow: rgba(239, 68, 68, 0.12);
+    --crimson-strict: #E11D48;
+    --crimson-glow: rgba(225, 29, 72, 0.15);
 
-    --text-primary: #F9FAFB;
-    --text-secondary: #9CA3AF;
-    --text-muted: #64748B;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #475569;
 
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -34,12 +54,26 @@
 
     --radius-sm: 8px;
     --radius-md: 14px;
-    --radius-lg: 22px;
+    --radius-lg: 20px;
     --radius-xl: 32px;
     --radius-pill: 9999px;
 
     --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    --spring-ios-snappy: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    --spring-ios-fluid: 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    --spring-ios-press: 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Apple-Grade Spring Physics & Somatosensory Tactile Press */
+button, .btn, .preview-tab, .nav-item, .chip, .feature-card, .spec-card {
+    transition: transform var(--spring-ios-snappy), background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    will-change: transform;
+}
+
+button:active, .btn:active, .preview-tab:active, .nav-item:active, .chip:active {
+    transform: scale(0.96) !important;
+    transition-duration: 0.12s;
 }
 
 /* Base Reset */
@@ -76,14 +110,22 @@ h1, h2, h3, h4 {
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #10B981 100%);
+    background: linear-gradient(135deg, #6BBF9E 0%, #4EA88B 45%, #6366F1 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.text-mint { color: var(--mint-light); }
-.text-crimson { color: var(--crimson-strict); }
-.text-amber { color: var(--amber-warning); }
+/* Tabular Numerals Enforcement (Zero horizontal layout jitter) */
+.timer, .counter, .metric, .stat, .countdown, [data-tnum], .tab-count, .screen-time-val, .spec-val, .sim-time, .breathing-count {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.text-mint, .text-sage { color: var(--accent-sage-light); }
+.text-crimson { color: var(--accent-crimson); }
+.text-amber { color: var(--accent-amber); }
+.text-indigo { color: var(--accent-indigo); }
 
 /* Common Container */
 .section-container, .hero-container, .nav-container, .download-container, .footer-container {
@@ -730,95 +772,242 @@ h1, h2, h3, h4 {
 
 .bg-crimson { background: var(--crimson-strict); }
 
-/* Mock Breathing Screen (Overlay View) */
+/* Mock Breathing Screen (Overlay View - Neuro-Ergonomic Optical Center) */
 .overlay-mock-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding-top: 40px;
+    padding-top: 24px;
     height: 100%;
 }
 
 .overlay-app-title {
-    font-size: 1.3rem;
-    font-weight: 800;
-    margin-bottom: 30px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-primary);
 }
 
 .breathing-circle-wrapper {
     position: relative;
-    width: 130px;
-    height: 130px;
+    width: 140px;
+    height: 140px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 36px;
+    margin-bottom: 28px;
 }
 
 .circle-outer {
     position: absolute;
-    width: 130px;
-    height: 130px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    background: rgba(239, 68, 68, 0.12);
-    animation: mockBreathe 4s infinite ease-in-out;
+    background: rgba(78, 168, 139, 0.15);
+    animation: mockBreathe 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .circle-mid {
     position: absolute;
-    width: 95px;
-    height: 95px;
+    width: 105px;
+    height: 105px;
     border-radius: 50%;
-    background: rgba(239, 68, 68, 0.25);
-    animation: mockBreathe 4s infinite ease-in-out;
+    background: rgba(78, 168, 139, 0.30);
+    animation: mockBreathe 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .circle-core {
     position: absolute;
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
-    background: var(--crimson-strict);
+    background: var(--accent-sage);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
+    box-shadow: 0 0 24px rgba(78, 168, 139, 0.4);
 }
 
 .circle-core svg {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 }
 
 .overlay-message-block {
-    margin-bottom: 30px;
+    margin-bottom: 24px;
 }
 
 .overlay-heading {
     font-size: 1.25rem;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 6px;
+    color: var(--text-primary);
 }
 
 .overlay-body {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     line-height: 1.5;
 }
 
+.overlay-countdown-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent-sage);
+    margin-top: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
 .overlay-btn-home {
     width: 100%;
-    padding: 12px;
+    min-height: 48px;
+    padding: 14px;
     border-radius: var(--radius-pill);
-    background: var(--crimson-strict);
-    color: #fff;
-    border: none;
+    background: var(--surface-2);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
     font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
     cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.overlay-btn-home:hover {
+    background: var(--accent-indigo);
+    border-color: var(--accent-indigo);
+    color: #fff;
+}
+
+/* Neuro-Ergonomic Top Integrity Banner */
+.top-integrity-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--accent-sage);
+    margin-bottom: 12px;
+}
+
+.top-integrity-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-sage);
+    box-shadow: 0 0 8px var(--accent-sage);
+    animation: pulse 2s infinite;
+}
+
+/* Armored Vault Cards */
+.vault-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: all var(--transition-fast);
+}
+
+.vault-card.armed {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, var(--surface-1) 100%);
+}
+
+.vault-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.vault-badge.armed {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--accent-indigo);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.vault-badge.locked-pill {
+    background: rgba(225, 29, 72, 0.12);
+    color: var(--accent-crimson);
+    border: 1px solid rgba(225, 29, 72, 0.3);
+    font-size: 0.58rem;
+}
+
+/* 7-Tap Sequence Indicator */
+.override-seq {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.override-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-subtle);
+}
+
+.override-dot.active {
+    background: var(--accent-amber);
+    box-shadow: 0 0 6px var(--accent-amber);
+}
+
+/* 3-Step Commitment Contract Cards */
+.step-card-mini {
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.step-card-mini.strict-contract {
+    border-color: rgba(225, 29, 72, 0.5);
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.06) 0%, var(--surface-1) 100%);
+}
+
+.step-card-mini.casual-contract {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, var(--surface-1) 100%);
+}
+
+.archetype-grid {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.archetype-option {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-2);
+    text-align: center;
+}
+
+.archetype-option.selected-strict {
+    border-color: var(--accent-crimson);
+    background: rgba(225, 29, 72, 0.1);
 }
 
 /* Mock Settings Cards */
@@ -1102,14 +1291,15 @@ h1, h2, h3, h4 {
     height: 220px;
     border-radius: 50%;
     margin: 0 auto 36px;
-    background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.05) 70%);
-    border: 2px solid var(--mint-primary);
+    background: radial-gradient(circle, rgba(78, 168, 139, 0.32) 0%, rgba(78, 168, 139, 0.08) 60%, transparent 100%);
+    border: 2px solid var(--accent-sage);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 50px var(--mint-glow);
-    transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 50px var(--accent-sage-glow);
+    transition: transform 3.8s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 3.5s ease;
+    will-change: transform;
 }
 
 .breathing-phase-text {
