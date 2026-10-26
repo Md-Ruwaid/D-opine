@@ -360,21 +360,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         calendarDays: Int,
         mode: RuleMode
     ) {
+        createRules(
+            apps = listOf(AppInfo(packageName, appName, null)),
+            dailyLimitMinutes = dailyLimitMinutes,
+            calendarDays = calendarDays,
+            mode = mode
+        )
+    }
+
+    fun createRules(
+        apps: List<AppInfo>,
+        dailyLimitMinutes: Long,
+        calendarDays: Int,
+        mode: RuleMode
+    ) {
         viewModelScope.launch {
             if (mode == RuleMode.STRICT) {
                 regainPreferences.updateUninstallProtection(true)
             }
-            ruleRepository.createRule(
-                packageName = packageName,
-                appName = appName,
-                limitMinutes = dailyLimitMinutes,
-                totalDays = calendarDays,
-                mode = mode
-            )
+            for (app in apps) {
+                ruleRepository.createRule(
+                    packageName = app.packageName,
+                    appName = app.appName,
+                    limitMinutes = dailyLimitMinutes,
+                    totalDays = calendarDays,
+                    mode = mode
+                )
+            }
             AppBlockerService.instance?.checkImmediately()
             refreshDashboardMetrics()
         }
     }
+
 
     fun startCasualCooldown(ruleId: Long) {
         viewModelScope.launch {

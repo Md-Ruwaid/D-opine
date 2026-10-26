@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -141,6 +142,12 @@ fun MindfulOverlayContent(
     onExitToHome: () -> Unit,
     onProceed: () -> Unit
 ) {
+    if (isStrictBlock || isTamperBlock) {
+        BackHandler {
+            onExitToHome()
+        }
+    }
+
     var countdown by remember { mutableIntStateOf(5) }
     var secondsRemaining by remember {
         val now = java.util.Calendar.getInstance()
@@ -304,14 +311,14 @@ fun MindfulOverlayContent(
                 )
             } else if (isStrictBlock) {
                 Text(
-                    text = "Daily Limit Reached",
+                    text = "App Locked by StrictLock",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
                     color = RegainCrimson
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Strict Mode Protection is active.\nNo extensions or bypasses allowed today.",
+                    text = "Strict Mode Protection is active.\nAccess is blocked. Stay focused on your goals.",
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     textAlign = TextAlign.Center,
